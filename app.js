@@ -81,13 +81,17 @@ function stackPeekByte (stack) {
     readByte(stack.arr, stack.p);
 }
 
-function readNextString (input) {
-    let count = readNextByte(input);
+function readString (arr, addr) {
+    let count = readByte(arr, addr);
     let value = "";
     for (let i = 0; i < count; i++) {
-	value += String.fromCharCode(readNextByte(input));
+	value += String.fromCharCode(readByte(memory, addr + i + 1));
     }
     return value;
+}
+
+function readNextString (input) {
+    readString(input.arr, input.p)
 }
 
 function writeString (arr, addr, value) {
@@ -174,26 +178,19 @@ function vocab (name) {
 // Dictionary entry
 // flags                    - 1 byte
 // link to previous word    - 1 cell
-// link to code field       - 1 cell
-// link to parameters field - 1 cell
 // name
 //   count                  - 1 byte
 //   string                 - <count> bytes
-// code                     - cells for end of entry
-// parameters               - cells for end of entry
-function entry (name, flags) {
+// code pointer             - 1 cell
+// data field               - cells with data
+
+function entry (name) {
     let lastWord = vocabularies[0].word;
     vocabularies[0].word = memory.length;
-    writeNextByte(memory, 2);
-    writeNextCell(memory, lastWord);
-    writeNextString(memory, name);
-}
 
-function asmEntry (name, code) {
-    vocab("assembler");
-    entry(name, 2);
-    writeNextCell(memory, asm_vocab.p);
-    asmVocabPush(code);
+    writeNextByte(memory, 0);           // flags
+    writeNextCell(memory, lastWord);    // link to previous word
+    writeNextString(memory, name);      // word name
 }
 
 function execAsm (fn) {
@@ -206,55 +203,17 @@ function makeAsm (str) {
     return Function('returnFromCode', str);
 }
 
+function asm_entry (name, code) {
+    vocab("assembler");
+    entry(name);
+    writeNextCell(memory, 1);
+    writeNextCell(memory, asm_vocab.p);
+    asmVocabPush(makeAsm(code));
+}
+
 let asmFn = makeAsm(`console.log(111);
 //returnFromCode(7);
 `);
-
-async function address_interpreter () {
-    while (return_stack.p > 0) {
-	let code_addr = returnStackPopCell();
-	let parm_addr = returnStackPopCell();
-
-	let code = readCell(memory, code_addr);
-	if (parm_addr > 0) {
-	    parm = readCell(memory, parm_addr);
-	}
-
-	if (code == 1) {
-	    let _ = await execAsm(asmVocabPeek(parm));
-	} else if (code == 2) {
-	} else {
-	}
-
-	// if (!isWord(addr))
-	//     throw "Can not interpret non-Word";
-
-	let cf = codeField(addr);
-	let asm_addr = readCell(memory, cf);
-	let js_fun = asmVocabPeek(asm_addr);
-	js_fun();
-    }
-}
-
-writeNextByte(memory, 0); 		// zero byte is empty and nothing;
-writeNextByte(memory, 0);		// first byte is empty and define an assembler word;
-writeNextByte(memory, 0);		// second byte is empty and define constant;
-
-vocab("assembler");
-vocab("forth");
-
-asmEntry("here", "dataStackPushCell(memory.length)");
-asmEntry("+", "dataStackPushCell(dataStackPopCell() + dataStackPopCell())");
-asmEntry(".", "console.log(dataStackPopCell())");
-
-function dumpAll () {
-    // console.log("------------");
-    // console.log(memory);
-    // console.log(asm_vocab);
-    // console.log(data_stack);
-    // console.log(return_stack);
-    // console.log(vocabularies);
-}
 
 const readline = require('readline');
 let receiveKey = undefined;
@@ -274,26 +233,112 @@ function readKey () {
     });
 }
 
-async function waitAsm () {
-    console.log(await execAsm(asmFn));
+async function address_interpreter () {
+    while (return_stack.p > 0) {
+	let code_addr = returnStackPopCell();
+	let code = readCell(memory, code_addr);
+	if (code == 1) {
+	    let asm_pointer = readCell(memory, code_addr + 2);
+	    await execAsm(asmVocabPeek(asm_pointer));
+	} else {
+	    throw "Unabled to process non assembler code";
+	}
+    }
 }
 
-waitAsm();
-
-
-async function mainLoop() {
-    let isActive = true;
-    while (isActive) {
-	let key = await readKey();
-	console.log(key);
-	if (key == 13) {
-	    isActive = false;
+function find_word (name) {
+    for (var i = 0; i < vocabularies.length; i++) {
+	let word_addr = vocabularies[i].word;
+	while (word_addr > 0) {
+	    let word_name_addr = word_addr + 1 + 2;
+	    let word_name = readString(memory, word_name_addr);
+	    if (name == word_name) {
+		return word_addr;
+	    } else {
+		word_addr = readCell(memory, word_addr + 1);
+	    }
 	}
+    }
+    return undefined;
+}
+
+function dumpAll () {
+    console.log("------------");
+    console.log(memory);
+    console.log(asm_vocab);
+    console.log(data_stack);
+    console.log(return_stack);
+    console.log(vocabularies);
+}
+
+function code_pointer_addr (word_addr) {
+    return word_addr + 1 + 2 + 1 + memory[word_addr + 1 + 2];
+}
+
+// implement word interpreter
+// write word to tib
+// first cell is a length of input
+async function word_interpreter () {
+    console.log("Welcome to forth interpreter prototype");
+    console.log("Type 'bye' to exit");
+    console.log();
+    let word = "";
+    try {
+	while (true) {
+	    let key = await readKey();
+	    process.stdout.write(String.fromCharCode(key));
+	    if (key <= 32) {
+		if (word != "") {
+		    if (word == "bye") {
+			break;
+		    } else if (word == "dumpAll") {
+			dumpAll();
+			word = "";
+		    } else {
+			let word_addr = find_word(word);
+			if (word_addr == undefined) {
+			    console.log("Word is not found: " + word);
+			} else {
+			    returnStackPushCell(code_pointer_addr(word_addr));
+			    await address_interpreter();
+			}
+			word = "";
+		    }
+		}
+	    }
+	    else {
+		word += String.fromCharCode(key);
+	    }
+	}
+    } catch (err) {
+	console.log("Error:", err);
     }
     process.exit();
 }
 
-mainLoop();
+writeNextByte(memory, 0); 		// zero byte is empty and nothing;
+writeNextByte(memory, 0);		// first byte is empty and define an assembler word;
+
+vocab("assembler");
+vocab("forth");
+// need to remember that last code is returnFromCode(<value>)
+asm_entry("code", "console.log(111); returnFromCode();");
+
+word_interpreter();
+
+// async function mainLoop() {
+//     let isActive = true;
+//     while (isActive) {
+// 	let key = await readKey();
+// 	console.log(key);
+// 	if (key == 13) {
+// 	    isActive = false;
+// 	}
+//     }
+//     process.exit();
+// }
+
+// mainLoop();
 
 // asyncCode();
 // finish();
