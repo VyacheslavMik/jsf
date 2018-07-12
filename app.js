@@ -307,7 +307,7 @@ function readWord (line) {
     return {word: word, line: ""};
 }
 
-
+console.log(readWord("code"));
 
 // implement word interpreter
 // write word to tib
