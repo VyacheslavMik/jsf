@@ -218,6 +218,10 @@ let asmFn = makeAsm(`console.log(111);
 const readline = require('readline');
 let receiveKey = undefined;
 readline.emitKeypressEvents(process.stdin);
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
 process.stdin.setRawMode(true);
 process.stdin.on('keypress', (str, key) => {
     if (receiveKey != undefined) {
@@ -230,6 +234,21 @@ process.stdin.on('keypress', (str, key) => {
 function readKey () {
     return new Promise(resolve => {
 	receiveKey = resolve;
+    });
+}
+
+let receiveLine = undefined;
+rl.on('line', (line) => {
+    if (receiveLine != undefined) {
+	let handler = receiveLine;
+	receiveLine = undefined;
+	handler(line);
+    }
+});
+
+function readLine () {
+    return new Promise(resolve => {
+	rl.prompt();
     });
 }
 
@@ -275,6 +294,21 @@ function code_pointer_addr (word_addr) {
     return word_addr + 1 + 2 + 1 + memory[word_addr + 1 + 2];
 }
 
+function readWord (line) {
+    let word = "";
+    for (var i = 0; i < line.length; i++) {
+	let key = line.charCodeAt(i);
+	if (key <= 32) {
+	    return {word: word, line: line.substr(i)};
+	} else {
+	    word += line[i];
+	}
+    }
+    return {word: word, line: ""};
+}
+
+
+
 // implement word interpreter
 // write word to tib
 // first cell is a length of input
@@ -286,7 +320,7 @@ async function word_interpreter () {
     try {
 	while (true) {
 	    let key = await readKey();
-	    process.stdout.write(String.fromCharCode(key));
+	    // process.stdout.write(String.fromCharCode(key));
 	    if (key <= 32) {
 		if (word != "") {
 		    if (word == "bye") {
@@ -321,8 +355,26 @@ writeNextByte(memory, 0);		// first byte is empty and define an assembler word;
 
 vocab("assembler");
 vocab("forth");
+
 // need to remember that last code is returnFromCode(<value>)
-asm_entry("code", "console.log(111); returnFromCode();");
+// asm_entry("code",
+// 	  `
+// let code = "";
+// while (true) {
+// let key = await readKey();
+// code += String.fromCharCode(key);
+// if (code.includes(";code")) {
+// code = code.replace(";code", "");
+// code = code.trim();
+// let name = code.substr(0, code.indexOf(" "));
+// code = code.substr(code.indexOf(" "));
+// code = code.trim();
+// asm_entry(name, code);
+// break;
+// }
+// }
+// returnFromCode();
+// `);
 
 word_interpreter();
 
