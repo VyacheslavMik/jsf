@@ -83,9 +83,9 @@ function stackPeekByte (stack) {
 
 function readString (arr, addr) {
     let count = readByte(arr, addr);
-    let value = "";
+    let value = '';
     for (let i = 0; i < count; i++) {
-	value += String.fromCharCode(readByte(memory, addr + i + 1));
+	value += String.fromCharCode(readByte(arr, addr + i + 1));
     }
     return value;
 }
@@ -193,14 +193,34 @@ function entry (name) {
     writeNextString(memory, name);      // word name
 }
 
+function readWord (line) {
+    line = line.trim();
+    let word = '';
+    for (var i = 0; i < line.length; i++) {
+	let key = line.charCodeAt(i);
+	if (key <= 32) {
+	    return {word: word, line: line.substr(i)};
+	} else {
+	    word += line[i];
+	}
+    }
+    return {word: word, line: ''};
+}
+
 function execAsm (fn) {
     return new Promise(returnFromCode => {
-	fn(returnFromCode);
+	fn(returnFromCode,
+	   {memory: memory,
+	    asm_entry: asm_entry,
+	    readString: readString,
+	    writeString: writeString,
+	    tib: tib,
+	    readWord: readWord});
     });
 }
 
 function makeAsm (str) {
-    return Function('returnFromCode', str);
+    return Function('returnFromCode', 'env', str);
 }
 
 function asm_entry (name, code) {
@@ -296,20 +316,6 @@ function code_pointer_addr (word_addr) {
     return word_addr + 1 + 2 + 1 + memory[word_addr + 1 + 2];
 }
 
-function readWord (line) {
-    line = line.trim();
-    let word = '';
-    for (var i = 0; i < line.length; i++) {
-	let key = line.charCodeAt(i);
-	if (key <= 32) {
-	    return {word: word, line: line.substr(i)};
-	} else {
-	    word += line[i];
-	}
-    }
-    return {word: word, line: ''};
-}
-
 // implement word interpreter
 // write word to tib
 // first cell is a length of input
@@ -318,18 +324,30 @@ async function word_interpreter () {
     console.log("Type 'bye' to exit");
     console.log();
 
+    let count = 0;
+
     try {
 	let line = await readLine();
+	writeString(tib, 0, line);
 	let word = '';
 	while (true) {
-	    let parsed = readWord(line);
+	    let parsed = readWord(readString(tib, 0));
 	    word = parsed.word;
 	    line = parsed.line;
+
+	    writeString(tib, 0, line);
+
+	    console.log('xxx', word, 'yyy', line);
+
+	    if (count > 5) {
+		break;
+	    }
+	    count++;
 
 	    if (word == 'bye') {
 		break;
 	    } else if (word == 'dumpall') {
-		dumpall();
+		dumpAll();
 	    } else if (word != '') {
 		let word_addr = find_word(word);
 		if (word_addr == undefined) {
@@ -360,68 +378,30 @@ vocab("assembler");
 vocab("forth");
 
 // need to remember that last code is returnFromCode(<value>)
-// asm_entry("code",
-// 	  `
-// let code = "";
-// while (true) {
-// let key = await readKey();
-// code += String.fromCharCode(key);
-// if (code.includes(";code")) {
-// code = code.replace(";code", "");
-// code = code.trim();
-// let name = code.substr(0, code.indexOf(" "));
-// code = code.substr(code.indexOf(" "));
-// code = code.trim();
-// asm_entry(name, code);
-// break;
-// }
-// }
-// returnFromCode();
-// `);
-
 asm_entry("code",
 	  `
-console.log('111111');
+let parsed;
+if (env.memory[1] == 0) {
+parsed = env.readWord(env.readString(env.tib, 0));
+env.writeString(env.tib, 0, parsed.line);
+env.memory[1] = {name: parsed.word, code: ''};
+}
+
+do {
+parsed = env.readWord(env.readString(env.tib, 0));
+env.writeString(env.tib, 0, parsed.line);
+if (parsed.word == ';code') {
+console.log(env.memory[1].code);
+env.asm_entry(env.memory[1].name, env.memory[1].code);
+env.memory[1] = 0;
+break;
+} else {
+env.memory[1].code += ' ' + parsed.word;
+}
+}
+while (parsed.word != '');
 returnFromCode();
 `);
 
+
 word_interpreter();
-
-// async function mainLoop() {
-//     let isActive = true;
-//     while (isActive) {
-// 	let key = await readKey();
-// 	console.log(key);
-// 	if (key == 13) {
-// 	    isActive = false;
-// 	}
-//     }
-//     process.exit();
-// }
-
-// mainLoop();
-
-// asyncCode();
-// finish();
-
-//console.log(readKey());
-
-//console.log(memory);
-
-// dataStackPushCell(1);
-// dumpAll();
-// execute();
-
-// dataStackPushCell(1);
-// dumpAll();
-// execute();
-
-// dataStackPushCell(11);
-// dumpAll();
-// execute();
-
-// dataStackPushCell(18);
-// dumpAll();
-// execute();
-
-// dumpAll();
