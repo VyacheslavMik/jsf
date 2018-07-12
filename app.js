@@ -219,8 +219,9 @@ const readline = require('readline');
 let receiveKey = undefined;
 readline.emitKeypressEvents(process.stdin);
 const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout,
+    input: process.stdin,
+    output: process.stdout,
+    prompt: ''
 });
 process.stdin.setRawMode(true);
 process.stdin.on('keypress', (str, key) => {
@@ -248,6 +249,7 @@ rl.on('line', (line) => {
 
 function readLine () {
     return new Promise(resolve => {
+	receiveLine = resolve;
 	rl.prompt();
     });
 }
@@ -295,7 +297,8 @@ function code_pointer_addr (word_addr) {
 }
 
 function readWord (line) {
-    let word = "";
+    line = line.trim();
+    let word = '';
     for (var i = 0; i < line.length; i++) {
 	let key = line.charCodeAt(i);
 	if (key <= 32) {
@@ -304,10 +307,8 @@ function readWord (line) {
 	    word += line[i];
 	}
     }
-    return {word: word, line: ""};
+    return {word: word, line: ''};
 }
-
-console.log(readWord("code"));
 
 // implement word interpreter
 // write word to tib
@@ -316,32 +317,34 @@ async function word_interpreter () {
     console.log("Welcome to forth interpreter prototype");
     console.log("Type 'bye' to exit");
     console.log();
-    let word = "";
+
     try {
+	let line = await readLine();
+	let word = '';
 	while (true) {
-	    let key = await readKey();
-	    // process.stdout.write(String.fromCharCode(key));
-	    if (key <= 32) {
-		if (word != "") {
-		    if (word == "bye") {
-			break;
-		    } else if (word == "dumpAll") {
-			dumpAll();
-			word = "";
-		    } else {
-			let word_addr = find_word(word);
-			if (word_addr == undefined) {
-			    console.log("Word is not found: " + word);
-			} else {
-			    returnStackPushCell(code_pointer_addr(word_addr));
-			    await address_interpreter();
-			}
-			word = "";
-		    }
+	    let parsed = readWord(line);
+	    word = parsed.word;
+	    line = parsed.line;
+
+	    if (word == 'bye') {
+		break;
+	    } else if (word == 'dumpall') {
+		dumpall();
+	    } else if (word != '') {
+		let word_addr = find_word(word);
+		if (word_addr == undefined) {
+		    console.log("Word is not found: " + word);
+		} else {
+		    returnStackPushCell(code_pointer_addr(word_addr));
+		    await address_interpreter();
+		    console.log('ok');
 		}
+	    } else {
+		console.log('ok');
 	    }
-	    else {
-		word += String.fromCharCode(key);
+
+	    if (line == '') {
+		line = await readLine();
 	    }
 	}
     } catch (err) {
@@ -375,6 +378,12 @@ vocab("forth");
 // }
 // returnFromCode();
 // `);
+
+asm_entry("code",
+	  `
+console.log('111111');
+returnFromCode();
+`);
 
 word_interpreter();
 
