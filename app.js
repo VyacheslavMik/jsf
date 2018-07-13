@@ -245,6 +245,11 @@ const rl = readline.createInterface({
 });
 process.stdin.setRawMode(true);
 process.stdin.on('keypress', (str, key) => {
+
+    if (key.sequence.charCodeAt(0) == 3) {
+	process.exit()
+    }; // for test reason
+
     if (receiveKey != undefined) {
 	let handler = receiveKey;
 	receiveKey = undefined;
@@ -337,7 +342,7 @@ async function word_interpreter () {
 
 	    writeString(tib, 0, line);
 
-	    console.log('xxx', word, 'yyy', line);
+	    console.log('word', word, 'line', line, 'tib', tib.slice(0, 7));
 
 	    if (count > 5) {
 		break;
@@ -363,6 +368,7 @@ async function word_interpreter () {
 
 	    if (line == '') {
 		line = await readLine();
+		writeString(tib, 0, line);
 	    }
 	}
     } catch (err) {
@@ -405,3 +411,8 @@ returnFromCode();
 
 
 word_interpreter();
+
+// code examples
+//
+// code tmp console.log('from tmp'); returnFromCode(); ;code
+// code tmp console.log('from tmp'); ;code
