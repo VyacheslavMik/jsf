@@ -1,6 +1,8 @@
 let memory = [];
 let tib = [];
+let blk = 0;
 let vocabularies = [];
+let blocks = [];
 
 function readCell (arr, addr) {
     return arr[addr] * 256 + arr[addr + 1];
@@ -193,18 +195,32 @@ function entry (name) {
     writeNextString(memory, name);      // word name
 }
 
-function readWord (line) {
+function readWord () {
+    let input_stream = tib;
+    if (blk > 0) {
+	let idx = blk - 1;
+	if (blocks[idx] == undefined) {
+	    throw 'Cannot read block ' + blk;
+	}
+	input_stream = blocks[idx];
+    }
+    let line = readString(input_stream, 0);
     line = line.trim();
     let word = '';
     for (var i = 0; i < line.length; i++) {
 	let key = line.charCodeAt(i);
 	if (key <= 32) {
-	    return {word: word, line: line.substr(i)};
+	    writeString(input_stream, 0, line.substr(i));
+	    return word;
 	} else {
 	    word += line[i];
 	}
     }
-    return {word: word, line: ''};
+    writeString(input_stream, 0, '');
+    if (blk > 0) {
+	blk = 0;
+    }
+    return word;
 }
 
 function execAsm (fn) {
@@ -212,9 +228,6 @@ function execAsm (fn) {
 	fn(returnFromCode,
 	   {memory: memory,
 	    asm_entry: asm_entry,
-	    readString: readString,
-	    writeString: writeString,
-	    tib: tib,
 	    readWord: readWord});
     });
 }
@@ -230,10 +243,6 @@ function asm_entry (name, code) {
     writeNextCell(memory, asm_vocab.p);
     asmVocabPush(makeAsm(code));
 }
-
-let asmFn = makeAsm(`console.log(111);
-//returnFromCode(7);
-`);
 
 const readline = require('readline');
 let receiveKey = undefined;
@@ -266,6 +275,7 @@ function readKey () {
 let receiveLine = undefined;
 rl.on('line', (line) => {
     if (receiveLine != undefined) {
+	readline.moveCursor(process.stdout, -10, 0);
 	let handler = receiveLine;
 	receiveLine = undefined;
 	handler(line);
@@ -321,54 +331,92 @@ function code_pointer_addr (word_addr) {
     return word_addr + 1 + 2 + 1 + memory[word_addr + 1 + 2];
 }
 
+var fs = require('fs');
+
+function load (name) {
+    return new Promise(resolve => {
+	fs.readFile( __dirname + '/' + name, function (err, data) {
+	    if (err) {
+		throw err; 
+	    }
+	    let content = data.toString();
+	    let count = Math.ceil(data.length / 1024);
+
+	    for (var i = 0; i < count; i++) {
+		let arr = [];
+		let str = content.substring(i * 1024, (i + 1) * 1024);
+		writeString(arr, 0, str);
+		blocks[i] = arr;
+	    }
+
+	    blk = 1;
+
+	    resolve();
+	});
+    });
+}
+
 // implement word interpreter
 // write word to tib
 // first cell is a length of input
 async function word_interpreter () {
     console.log("Welcome to forth interpreter prototype");
     console.log("Type 'bye' to exit");
-    console.log();
 
     let count = 0;
+    let message = '';
+
+    await load('core.f');
 
     try {
-	let line = await readLine();
-	writeString(tib, 0, line);
-	let word = '';
 	while (true) {
-	    let parsed = readWord(readString(tib, 0));
-	    word = parsed.word;
-	    line = parsed.line;
+	    let word = readWord();
 
-	    writeString(tib, 0, line);
+	    //console.log('word', word, 'line', readString(tib, 0), 'tib', tib.slice(0, 7), 'blocks', blocks, 'blk', blk);
 
-	    console.log('word', word, 'line', line, 'tib', tib.slice(0, 7));
+	    if (word == '') {
+		console.log(message);
+		let line = await readLine();
+		writeString(tib, 0, line);
+	    }
 
-	    if (count > 5) {
+	    if (count > 15) {
 		break;
 	    }
 	    count++;
 
-	    if (word == 'bye') {
-		break;
-	    } else if (word == 'dumpall') {
-		dumpAll();
-	    } else if (word != '') {
+	    if (memory[0] == 0) {
+		if (word == 'bye') {
+		    break;
+		} else if (word == 'dumpall') {
+		    dumpAll();
+		    message = 'ok';
+		} else if (word != '') {
+		    let word_addr = find_word(word);
+		    if (word_addr == undefined) {
+			message = 'Word is not found: ' + word;
+			if (blk > 0) {
+			    blk = 0;
+			}
+			writeNextString(tib, 0, '');
+		    } else {
+			returnStackPushCell(code_pointer_addr(word_addr));
+			await address_interpreter();
+			message = 'ok';
+		    }
+		} else {
+		    message = 'ok';
+		}
+	    } else {
 		let word_addr = find_word(word);
 		if (word_addr == undefined) {
-		    console.log("Word is not found: " + word);
+		    memory[1].code += ' ' + word;
+		    message = 'compiled';
 		} else {
 		    returnStackPushCell(code_pointer_addr(word_addr));
 		    await address_interpreter();
-		    console.log('ok');
+		    message = 'ok'
 		}
-	    } else {
-		console.log('ok');
-	    }
-
-	    if (line == '') {
-		line = await readLine();
-		writeString(tib, 0, line);
 	    }
 	}
     } catch (err) {
@@ -377,35 +425,31 @@ async function word_interpreter () {
     process.exit();
 }
 
-writeNextByte(memory, 0); 		// zero byte is empty and nothing;
+writeNextByte(memory, 0); 		// compilation state
 writeNextByte(memory, 0);		// first byte is empty and define an assembler word;
+writeNextByte(memory, 0);		// compilation vocabulary
 
 vocab("assembler");
 vocab("forth");
 
 // need to remember that last code is returnFromCode(<value>)
-asm_entry("code",
-	  `
-let parsed;
-if (env.memory[1] == 0) {
-parsed = env.readWord(env.readString(env.tib, 0));
-env.writeString(env.tib, 0, parsed.line);
-env.memory[1] = {name: parsed.word, code: ''};
+asm_entry("code", `
+let name = env.readWord();
+if (name.trim() == '') {
+    throw 'Empty string for name';
 }
+env.memory[0] = 1;
+env.memory[1] = { name: name, code: '' };
+returnFromCode();
+`);
 
-do {
-parsed = env.readWord(env.readString(env.tib, 0));
-env.writeString(env.tib, 0, parsed.line);
-if (parsed.word == ';code') {
-console.log(env.memory[1].code);
+asm_entry('end-code', `
+if (!env.memory[1].code.includes('returnFromCode()')) {
+    throw 'returnFromCode not found!!!';
+}
 env.asm_entry(env.memory[1].name, env.memory[1].code);
+env.memory[0] = 0;
 env.memory[1] = 0;
-break;
-} else {
-env.memory[1].code += ' ' + parsed.word;
-}
-}
-while (parsed.word != '');
 returnFromCode();
 `);
 
@@ -414,5 +458,5 @@ word_interpreter();
 
 // code examples
 //
-// code tmp console.log('from tmp'); returnFromCode(); ;code
-// code tmp console.log('from tmp'); ;code
+// code tmp console.log('from tmp'); returnFromCode(); end-code
+// code tmp console.log('from tmp'); end-code
