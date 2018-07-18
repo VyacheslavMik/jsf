@@ -1,7 +1,9 @@
+// need to refactor
 let memory = [];
+let vocabularies = [];
 let tib = [];
 let blk = 0;
-let vocabularies = [];
+let to_in = 0;
 let blocks = [];
 
 function readCell (arr, addr) {
@@ -84,10 +86,10 @@ function stackPeekByte (stack) {
 }
 
 function readString (arr, addr) {
-    let count = readByte(arr, addr);
+    let count = readCell(arr, addr);
     let value = '';
     for (let i = 0; i < count; i++) {
-	value += String.fromCharCode(readByte(arr, addr + i + 1));
+	value += String.fromCharCode(readByte(arr, addr + i + 2));
     }
     return value;
 }
@@ -97,8 +99,9 @@ function readNextString (input) {
 }
 
 function writeString (arr, addr, value) {
-    writeByte(arr, addr++, value.length);
-    let count = value.length & 0xFF;
+    writeCell(arr, addr, value.length);
+    addr += 2;
+    let count = value.length & 0xFFFF;
     for (let i = 0; i < count; i++) {
 	writeByte(arr, addr++, value.charCodeAt(i));
     }
@@ -181,7 +184,7 @@ function vocab (name) {
 // flags                    - 1 byte
 // link to previous word    - 1 cell
 // name
-//   count                  - 1 byte
+//   count                  - 1 cell
 //   string                 - <count> bytes
 // code pointer             - 1 cell
 // data field               - cells with data
@@ -204,31 +207,55 @@ function readWord () {
 	}
 	input_stream = blocks[idx];
     }
+
     let line = readString(input_stream, 0);
-    line = line.trim();
     let word = '';
-    for (var i = 0; i < line.length; i++) {
-	let key = line.charCodeAt(i);
+
+    for (; to_in < line.length; to_in++) {
+    	let key = line.charCodeAt(to_in);
+    	if (key > 32) {
+	    break;
+    	}
+    }
+
+    for (; to_in < line.length; to_in++) {
+	let key = line.charCodeAt(to_in);
 	if (key <= 32) {
-	    writeString(input_stream, 0, line.substr(i));
 	    return word;
 	} else {
-	    word += line[i];
+	    word += line[to_in];
 	}
     }
-    writeString(input_stream, 0, '');
+
     if (blk > 0) {
 	blk = 0;
+	to_in = 0;
     }
     return word;
 }
 
+function setBlock (val) {
+    to_in = 0;
+    blk = val;
+}
+
+let env = {memory:            memory,
+	   asm_entry:         asm_entry,
+	   entry:             entry,
+	   readCell:          readCell,
+	   writeCell:         writeCell,
+	   readByte:          readByte,
+	   writeByte:         writeByte,
+	   dataStackPopCell:  dataStackPopCell,
+	   dataStackPushCell: dataStackPushCell,
+	   dataStackPopByte:  dataStackPopByte,
+	   dataStackPushByte: dataStackPushByte,
+	   setBlock:          setBlock,
+	   readWord:          readWord};
+
 function execAsm (fn) {
     return new Promise(returnFromCode => {
-	fn(returnFromCode,
-	   {memory: memory,
-	    asm_entry: asm_entry,
-	    readWord: readWord});
+	fn(returnFromCode, env);
     });
 }
 
@@ -318,17 +345,45 @@ function find_word (name) {
     return undefined;
 }
 
-function dumpAll () {
+function dump () {
     console.log("------------");
-    console.log(memory);
-    console.log(asm_vocab);
-    console.log(data_stack);
-    console.log(return_stack);
-    console.log(vocabularies);
+    let flag = dataStackPopCell();
+    if (flag > 8 || flag < 1) {
+	console.log("end start 1 - memory.slice(start, end)");
+	console.log("          2 - asm_vocab");
+	console.log("          3 - data_stack");
+	console.log("          4 - return_stack");
+	console.log("          5 - vocabularies");
+	console.log("          6 - blk");
+	console.log("          7 - blocks");
+    }
+    if (flag == 1) {
+	let start = dataStackPopCell();
+	let end   = dataStackPopCell();
+	console.log(memory.slice(start, end));
+    }
+    if (flag == 2) {
+	console.log(asm_vocab);
+    }
+    if (flag == 3) {
+	console.log(data_stack);
+    }
+    if (flag == 4) {
+	console.log(return_stack);
+    }
+    if (flag == 5) {
+	console.log(vocabularies);
+    }
+    if (flag == 6) {
+	console.log(blk);
+    }
+    if (flag == 7) {
+	console.log(blocks);
+    }
 }
 
 function code_pointer_addr (word_addr) {
-    return word_addr + 1 + 2 + 1 + memory[word_addr + 1 + 2];
+    return word_addr + 1 + 2 + 2 + readCell(memory, word_addr + 1 + 2);
 }
 
 var fs = require('fs');
@@ -340,7 +395,7 @@ function load (name) {
 		throw err; 
 	    }
 	    let content = data.toString();
-	    let count = Math.ceil(data.length / 1024);
+	    let count = Math.ceil(content.length / 1024);
 
 	    for (var i = 0; i < count; i++) {
 		let arr = [];
@@ -356,6 +411,15 @@ function load (name) {
     });
 }
 
+function parseInteger (str) {
+    for (var i = 0; i < str.length; i++) {
+	if (str[i] < '0' || str[i] > '9') {
+	    return undefined;
+	}
+    }
+    return parseInt(str);
+}
+
 // implement word interpreter
 // write word to tib
 // first cell is a length of input
@@ -363,7 +427,6 @@ async function word_interpreter () {
     console.log("Welcome to forth interpreter prototype");
     console.log("Type 'bye' to exit");
 
-    let count = 0;
     let message = '';
 
     await load('core.f');
@@ -378,27 +441,28 @@ async function word_interpreter () {
 		console.log(message);
 		let line = await readLine();
 		writeString(tib, 0, line);
+		to_in = 0;
 	    }
-
-	    if (count > 15) {
-		break;
-	    }
-	    count++;
 
 	    if (memory[0] == 0) {
 		if (word == 'bye') {
 		    break;
-		} else if (word == 'dumpall') {
-		    dumpAll();
+		} else if (word == 'dump') {
+		    dump();
 		    message = 'ok';
 		} else if (word != '') {
 		    let word_addr = find_word(word);
 		    if (word_addr == undefined) {
-			message = 'Word is not found: ' + word;
-			if (blk > 0) {
-			    blk = 0;
+			let integer = parseInteger(word);
+			if (integer == undefined) {
+			    message = 'Word is not found: ' + word;
+			    if (blk > 0) {
+				blk = 0;
+			    }
+			    writeNextString(tib, 0, '');
+			} else {
+			    dataStackPushCell(integer);
 			}
-			writeNextString(tib, 0, '');
 		    } else {
 			returnStackPushCell(code_pointer_addr(word_addr));
 			await address_interpreter();
@@ -438,6 +502,7 @@ let name = env.readWord();
 if (name.trim() == '') {
     throw 'Empty string for name';
 }
+console.log('new code', name);
 env.memory[0] = 1;
 env.memory[1] = { name: name, code: '' };
 returnFromCode();
@@ -445,7 +510,7 @@ returnFromCode();
 
 asm_entry('end-code', `
 if (!env.memory[1].code.includes('returnFromCode()')) {
-    throw 'returnFromCode not found!!!';
+    throw 'returnFromCode() not found!!!';
 }
 env.asm_entry(env.memory[1].name, env.memory[1].code);
 env.memory[0] = 0;
@@ -460,3 +525,7 @@ word_interpreter();
 //
 // code tmp console.log('from tmp'); returnFromCode(); end-code
 // code tmp console.log('from tmp'); end-code
+
+// gforth
+// use blocked.fb 1 load editor
+// juse /Users/vyacheslavmikushev/Work/jsf/core.f

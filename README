@@ -1,0 +1,8 @@
+## ASSEMBLER EXTENSION WORD SET:
+### Implemented:
+* code
+* end-code
+
+## REQUIRED WORD SET
+### Implemented:
+* @, !, c@, c!, .
