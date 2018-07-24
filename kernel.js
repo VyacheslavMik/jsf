@@ -281,6 +281,7 @@ function find_word (name) {
 }
 
 let env = {memory:              memory,
+	   vocabularies:        vocabularies,
 
 	   asm_entry:           asm_entry,
 	   entry:               entry,
