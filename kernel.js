@@ -2,8 +2,13 @@
 let memory = [];
 let vocabularies = [];
 let tib = [];
+
 let blk = 0;
+let blk_tmp = 0;
+
 let to_in = 0;
+let to_in_tmp = 0;
+
 let blocks = [];
 
 function readCell (arr, addr) {
@@ -43,7 +48,7 @@ function stackPopCell (stack) {
 function stackPeekCell (stack) {
     if (stack.p <= 1)
 	throw stack.desc + " is underflow";
-    readCell(stack.arr, stack.p);
+    return readCell(stack.arr, stack.p - 2);
 }
 
 function readByte (arr, addr) {
@@ -147,6 +152,10 @@ function isWord (addr) {
     return true;
 }
 
+function isImmediate (addr) {
+    return memory[addr] == 1;
+}
+
 function linkField (addr) {
     return addr + 1;
 }
@@ -227,31 +236,79 @@ function readWord () {
 	}
     }
 
+
     if (blk > 0) {
-	blk = 0;
-	to_in = 0;
+	blk = blk_tmp;
+	to_in = to_in_tmp;
+	blk_tmp = 0;
+	to_in_tmp = 0;
+	return readWord();
     }
+
     return word;
 }
 
 function setBlock (val) {
+    to_in_tmp = to_in;
+    blk_tmp = blk;
+
     to_in = 0;
     blk = val;
 }
 
-let env = {memory:            memory,
-	   asm_entry:         asm_entry,
-	   entry:             entry,
-	   readCell:          readCell,
-	   writeCell:         writeCell,
-	   readByte:          readByte,
-	   writeByte:         writeByte,
-	   dataStackPopCell:  dataStackPopCell,
-	   dataStackPushCell: dataStackPushCell,
-	   dataStackPopByte:  dataStackPopByte,
-	   dataStackPushByte: dataStackPushByte,
-	   setBlock:          setBlock,
-	   readWord:          readWord};
+function getToIn () {
+    return to_in;
+}
+
+function setToIn(val) {
+    to_in = val;
+}
+
+function find_word (name) {
+    for (var i = 0; i < vocabularies.length; i++) {
+	let word_addr = vocabularies[i].word;
+	while (word_addr > 0) {
+	    let word_name_addr = word_addr + 1 + 2;
+	    let word_name = readString(memory, word_name_addr);
+	    if (name == word_name) {
+		return word_addr;
+	    } else {
+		word_addr = readCell(memory, word_addr + 1);
+	    }
+	}
+    }
+    return undefined;
+}
+
+let env = {memory:              memory,
+
+	   asm_entry:           asm_entry,
+	   entry:               entry,
+
+	   find_word:           find_word,
+
+	   readCell:            readCell,
+	   writeCell:           writeCell,
+
+	   readByte:            readByte,
+	   writeByte:           writeByte,
+
+	   writeNextCell:       writeNextCell,
+
+	   getToIn:             getToIn,
+	   setToIn:             setToIn,
+	   code_pointer_addr:   code_pointer_addr,
+
+	   dataStackPopCell:    dataStackPopCell,
+	   dataStackPushCell:   dataStackPushCell,
+	   dataStackPeekCell:   dataStackPeekCell,
+
+	   returnStackPopCell:  returnStackPopCell,
+	   returnStackPushCell: returnStackPushCell,
+	   returnStackPeekCell: returnStackPeekCell,
+
+	   setBlock:            setBlock,
+	   readWord:            readWord};
 
 function execAsm (fn) {
     return new Promise(returnFromCode => {
@@ -323,26 +380,18 @@ async function address_interpreter () {
 	if (code == 1) {
 	    let asm_pointer = readCell(memory, code_addr + 2);
 	    await execAsm(asmVocabPeek(asm_pointer));
+	} else if (code == 2) {
+	    let code_pointer = readCell(memory, code_addr + 2);
+	    returnStackPushCell(code_addr + 4);
+	    returnStackPushCell(code_pointer);
+	} else if (code == 3) {
+	    let integer = readCell(memory, code_addr + 2);
+	    returnStackPushCell(code_addr + 4);
+	    dataStackPushCell(integer);
 	} else {
-	    throw "Unabled to process non assembler code";
+	    throw 'Unabled to process code: ' + code;
 	}
     }
-}
-
-function find_word (name) {
-    for (var i = 0; i < vocabularies.length; i++) {
-	let word_addr = vocabularies[i].word;
-	while (word_addr > 0) {
-	    let word_name_addr = word_addr + 1 + 2;
-	    let word_name = readString(memory, word_name_addr);
-	    if (name == word_name) {
-		return word_addr;
-	    } else {
-		word_addr = readCell(memory, word_addr + 1);
-	    }
-	}
-    }
-    return undefined;
 }
 
 function dump () {
@@ -413,6 +462,9 @@ function load (name) {
 
 function parseInteger (str) {
     for (var i = 0; i < str.length; i++) {
+	if (i == 0 && str[i] == '-') {
+	    continue;
+	}
 	if (str[i] < '0' || str[i] > '9') {
 	    return undefined;
 	}
@@ -444,6 +496,14 @@ async function word_interpreter () {
 		to_in = 0;
 	    }
 
+	    let word_addr = find_word(word);
+	    if (word_addr != undefined && isImmediate(word_addr)) {
+		returnStackPushCell(code_pointer_addr(word_addr));
+		await address_interpreter();
+		message = 'ok';
+		continue;
+	    }
+	    
 	    if (memory[0] == 0) {
 		if (word == 'bye') {
 		    break;
@@ -456,10 +516,6 @@ async function word_interpreter () {
 			let integer = parseInteger(word);
 			if (integer == undefined) {
 			    message = 'Word is not found: ' + word;
-			    if (blk > 0) {
-				blk = 0;
-			    }
-			    writeNextString(tib, 0, '');
 			} else {
 			    dataStackPushCell(integer);
 			}
@@ -472,14 +528,33 @@ async function word_interpreter () {
 		    message = 'ok';
 		}
 	    } else {
-		let word_addr = find_word(word);
-		if (word_addr == undefined) {
-		    memory[1].code += ' ' + word;
-		    message = 'compiled';
+		if (memory[1] != 0) {
+		    let word_addr = find_word(word);
+		    if (word_addr == undefined) {
+			memory[1].code += ' ' + word;
+			message = 'compiled';
+		    } else {
+			returnStackPushCell(code_pointer_addr(word_addr));
+			await address_interpreter();
+			message = 'ok'
+		    }
+		} else if (memory[2] != 0) {
+		    let word_addr = find_word(word);
+		    if (word_addr == undefined) {
+			let integer = parseInteger(word);
+			if (integer == undefined) {
+			    message = 'Word is not found: ' + word;
+			} else {
+			    writeNextCell(memory, 3);
+			    writeNextCell(memory, integer);
+			}
+		    } else {
+			writeNextCell(memory, 2);
+			writeNextCell(memory, code_pointer_addr(word_addr));
+			message = 'compiled';
+		    }
 		} else {
-		    returnStackPushCell(code_pointer_addr(word_addr));
-		    await address_interpreter();
-		    message = 'ok'
+		    throw 'What is compiling?!';
 		}
 	    }
 	}
@@ -491,6 +566,8 @@ async function word_interpreter () {
 
 writeNextByte(memory, 0); 		// compilation state
 writeNextByte(memory, 0);		// first byte is empty and define an assembler word;
+writeNextByte(memory, 0);		// second byte is empty and define an execute word;
+writeNextByte(memory, 0);		// third byte is empty and define an literal word;
 writeNextByte(memory, 0);		// compilation vocabulary
 
 vocab("assembler");
@@ -500,7 +577,7 @@ vocab("forth");
 asm_entry("code", `
 let name = env.readWord();
 if (name.trim() == '') {
-    throw 'Empty string for name';
+    throw 'Empty string for name' ;
 }
 console.log('new code', name);
 env.memory[0] = 1;
@@ -518,6 +595,11 @@ env.memory[1] = 0;
 returnFromCode();
 `);
 
+asm_entry('\\', `
+env.setToIn((Math.floor(env.getToIn() / 64) + 1) * 64);
+returnFromCode();
+`);
+
 
 word_interpreter();
 
@@ -527,5 +609,9 @@ word_interpreter();
 // code tmp console.log('from tmp'); end-code
 
 // gforth
+
 // use blocked.fb 1 load editor
-// juse /Users/vyacheslavmikushev/Work/jsf/core.f
+// use /Users/vyacheslavmikushev/Work/jsf/core.f
+
+// copy block: <from-block> <to-block> cp
+// clear block: <block> db
