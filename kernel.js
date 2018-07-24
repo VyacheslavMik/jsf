@@ -293,6 +293,7 @@ let env = {memory:              memory,
 	   readByte:            readByte,
 	   writeByte:           writeByte,
 
+	   writeNextByte:       writeNextByte,
 	   writeNextCell:       writeNextCell,
 
 	   getToIn:             getToIn,
