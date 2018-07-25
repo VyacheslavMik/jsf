@@ -517,7 +517,7 @@ async function word_interpreter () {
 		    if (word_addr == undefined) {
 			let integer = parseInteger(word);
 			if (integer == undefined) {
-			    message = 'Word is not found: ' + word;
+			    throw 'Word is not found: ' + word;
 			} else {
 			    dataStackPushCell(integer);
 			}
@@ -532,7 +532,7 @@ async function word_interpreter () {
 	    } else {
 		if (memory[1] != 0) {
 		    let word_addr = find_word(word);
-		    if (word_addr == undefined) {
+		    if (word != 'end-code') {
 			memory[1].code += ' ' + word;
 			message = 'compiled';
 		    } else {
@@ -545,7 +545,7 @@ async function word_interpreter () {
 		    if (word_addr == undefined) {
 			let integer = parseInteger(word);
 			if (integer == undefined) {
-			    message = 'Word is not found: ' + word;
+			    throw 'Word is not found: ' + word;
 			} else {
 			    writeNextCell(memory, 3);
 			    writeNextCell(memory, integer);
