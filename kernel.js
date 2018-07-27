@@ -396,17 +396,22 @@ async function address_interpreter () {
     }
 }
 
+function code_pointer_addr (word_addr) {
+    return word_addr + 1 + 2 + 2 + readCell(memory, word_addr + 1 + 2);
+}
+
 function dump () {
     console.log("------------");
     let flag = dataStackPopCell();
-    if (flag > 8 || flag < 1) {
+    if (flag > 9 || flag < 1) {
 	console.log("end start 1 - memory.slice(start, end)");
 	console.log("          2 - asm_vocab");
 	console.log("          3 - data_stack");
 	console.log("          4 - return_stack");
 	console.log("          5 - vocabularies");
 	console.log("          6 - blk");
-	console.log("          7 - blocks");
+	console.log("          7 - blocks")
+	console.log("          8 - word");
     }
     if (flag == 1) {
 	let start = dataStackPopCell();
@@ -431,10 +436,42 @@ function dump () {
     if (flag == 7) {
 	console.log(blocks);
     }
-}
+    if (flag == 8) {
+	let word = readWord();
+	if (word == '') {
+	    console.log('Specify word');
+	    return;
+	}
+	let word_addr = find_word(word);
+	if (word_addr == undefined) {
+	    console.log('Word not found: ' + word);
+	    return;
+	}
+	
+	let exit_code_addr = code_pointer_addr(find_word('exit'));
+	let word_code_addr = code_pointer_addr(word_addr);
+	let output = '';
+	let cell = 0;
+	do {
+	    cell = readCell(memory, word_code_addr);
+	    if (cell == 1) {
+		output += '[a]';
+	    } else if (cell == 2) {
+		output += '[c]';
+	    } else if (cell == 3) {
+		output += '[l]';
+	    } else {
+		output += '[' + cell + ']';
+	    }
+	    word_code_addr += 2;
+	    cell = readCell(memory, word_code_addr);
+	    word_code_addr += 2;
+	    output += cell + ' ';
+	}
+	while (cell != exit_code_addr && cell != undefined);
 
-function code_pointer_addr (word_addr) {
-    return word_addr + 1 + 2 + 2 + readCell(memory, word_addr + 1 + 2);
+	console.log(output);
+    }
 }
 
 var fs = require('fs');
