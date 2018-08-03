@@ -21,6 +21,15 @@ function readCell (arr, addr) {
     return arr[addr] * 256 + arr[addr + 1];
 };
 
+function readCellNum (arr, addr) {
+    var sign = arr[addr] & (1 << 7);
+    var x = (((arr[addr] & 0xFF) << 8) | (arr[addr + 1] & 0xFF));
+    if (sign) {
+	x = 0xFFFF0000 | x;  // fill in most significant bits with 1's
+    }
+    return x;
+}
+
 function readNextCell (input) {
     let value = readCell(input.arr, input.p);
     input.p += 2;
@@ -47,6 +56,14 @@ function stackPopCell (stack) {
     if (stack.p <= 1)
 	throw stack.desc + " is underflow";
     let value = readCell(stack.arr, stack.p - 2);
+    stack.p -= 2;
+    return value;
+}
+
+function stackPopNum (stack) {
+    if (stack.p <= 1)
+	throw stack.desc + " is underflow";
+    let value = readCellNum(stack.arr, stack.p - 2);
     stack.p -= 2;
     return value;
 }
@@ -144,6 +161,7 @@ function dataStackPopByte  ()      { return stackPopByte(data_stack); }
 function dataStackPeekByte ()      { return stackPeekByte(data_stack); }
 function dataStackPushCell (value) { stackPushCell(data_stack, value); }
 function dataStackPopCell  ()      { return stackPopCell(data_stack); }
+function dataStackPopNum  ()       { return stackPopNum(data_stack); }
 function dataStackPeekCell ()      { return stackPeekCell(data_stack); }
 
 function returnStackPushByte (value) { stackPushByte(return_stack, value); }
@@ -361,6 +379,7 @@ let env = {memory:              memory,
 	   code_pointer_addr:   code_pointer_addr,
 
 	   dataStackPopCell:    dataStackPopCell,
+	   dataStackPopNum:     dataStackPopNum,
 	   dataStackPushCell:   dataStackPushCell,
 	   dataStackPeekCell:   dataStackPeekCell,
 
