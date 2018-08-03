@@ -11,6 +11,12 @@ let to_in_tmp = 0;
 
 let blocks = [];
 
+let output_buffer = '';
+let line_length = 0;
+let isPrintingOutput = false;
+
+let isOnPause = false;
+
 function readCell (arr, addr) {
     return arr[addr] * 256 + arr[addr + 1];
 };
@@ -236,7 +242,7 @@ function readWord () {
 	}
     }
 
-
+    // rewrite recursive function
     if (blk > 0) {
 	blk = blk_tmp;
 	to_in = to_in_tmp;
@@ -280,13 +286,66 @@ function find_word (name) {
     return undefined;
 }
 
+const readline = require('readline');
+let receiveKey = undefined;
+readline.emitKeypressEvents(process.stdin);
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    prompt: ''
+});
+process.stdin.setRawMode(true);
+process.stdin.on('keypress', (str, key) => {
+
+    if (key.sequence.charCodeAt(0) == 3) {
+	process.exit()
+    }; // for test reason
+
+    if (receiveKey != undefined) {
+	let handler = receiveKey;
+	receiveKey = undefined;
+	handler(key.sequence.charCodeAt(0));
+    }
+});
+
+function printValue (v) {
+    output_buffer += ' ' + v;
+}
+
+function printLast (v) {
+    output_buffer += v + '\n';
+}
+
+function printOutput () {
+    isPrintingOutput = true;
+    readline.moveCursor(process.stdout, line_length, -1);
+    rl.write(output_buffer);
+    output_buffer = '';
+    isPrintingOutput = false;
+}
+
+function printStack (stack) {
+    let count = stack.p / 2;
+    let output = '<' + count + '>';
+    for (var i = 0; i < count; i++) {
+	let v = readCell(stack.arr, 2 * i);
+	if (v > 32767) { v -= 65536; }
+	output += ' ' + v;
+    }
+    printValue(output);
+}
+
 let env = {memory:              memory,
+	   rs:                  return_stack,
+	   ds:                  data_stack,
 	   vocabularies:        vocabularies,
 
 	   asm_entry:           asm_entry,
 	   entry:               entry,
 
 	   find_word:           find_word,
+	   printStack:          printStack,
+	   printValue:          printValue,
 
 	   readCell:            readCell,
 	   writeCell:           writeCell,
@@ -313,13 +372,11 @@ let env = {memory:              memory,
 	   readWord:            readWord};
 
 function execAsm (fn) {
-    return new Promise(returnFromCode => {
-	fn(returnFromCode, env);
-    });
+    fn(env);
 }
 
 function makeAsm (str) {
-    return Function('returnFromCode', 'env', str);
+    return Function('env', str);
 }
 
 function asm_entry (name, code) {
@@ -330,58 +387,47 @@ function asm_entry (name, code) {
     asmVocabPush(makeAsm(code));
 }
 
-const readline = require('readline');
-let receiveKey = undefined;
-readline.emitKeypressEvents(process.stdin);
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-    prompt: ''
-});
-process.stdin.setRawMode(true);
-process.stdin.on('keypress', (str, key) => {
-
-    if (key.sequence.charCodeAt(0) == 3) {
-	process.exit()
-    }; // for test reason
-
-    if (receiveKey != undefined) {
-	let handler = receiveKey;
-	receiveKey = undefined;
-	handler(key.sequence.charCodeAt(0));
-    }
-});
-
-function readKey () {
-    return new Promise(resolve => {
-	receiveKey = resolve;
-    });
+function pause() {
+    isOnPause = true;
 }
 
-let receiveLine = undefined;
+function resume() {
+    isOnPause = false;
+    address_interpreter();
+    word_interpreter();
+}
+
 rl.on('line', (line) => {
-    if (receiveLine != undefined) {
-	readline.moveCursor(process.stdout, -10, 0);
-	let handler = receiveLine;
-	receiveLine = undefined;
-	handler(line);
+    if (!isPrintingOutput) {
+	line_length = line.length;
+	writeString(tib, 0, line);
+	to_in = 0;
+	resume();
     }
 });
 
-function readLine () {
-    return new Promise(resolve => {
-	receiveLine = resolve;
-	rl.prompt();
-    });
-}
+// create function pause and resume
+// In resume we start address_interpreter
+// then word_interpreter.
+// when we receive input we resume.
+// functions that need to wait need to execute
+// pause()
+// refactor functions address_interpreter and
+// word_interpreter to stop when pause.
 
-async function address_interpreter () {
+// use buffered output; firstly we store
+// data in buffer and then send output
+// DONE
+
+function address_interpreter () {
     while (return_stack.p > 0) {
+	if (isOnPause) break;
+
 	let code_addr = returnStackPopCell();
 	let code = readCell(memory, code_addr);
 	if (code == 1) {
 	    let asm_pointer = readCell(memory, code_addr + 2);
-	    await execAsm(asmVocabPeek(asm_pointer));
+	    execAsm(asmVocabPeek(asm_pointer));
 	} else if (code == 2) {
 	    let code_pointer = readCell(memory, code_addr + 2);
 	    returnStackPushCell(code_addr + 4);
@@ -401,54 +447,60 @@ function code_pointer_addr (word_addr) {
 }
 
 function dump () {
-    console.log("------------");
+    printLast("\n------------");
     let flag = dataStackPopCell();
     if (flag > 9 || flag < 1) {
-	console.log("end start 1 - memory.slice(start, end)");
-	console.log("          2 - asm_vocab");
-	console.log("          3 - data_stack");
-	console.log("          4 - return_stack");
-	console.log("          5 - vocabularies");
-	console.log("          6 - blk");
-	console.log("          7 - blocks")
-	console.log("          8 - word");
+	printLast("end start 1 - memory.slice(start, end)");
+	printLast("          2 - asm_vocab");
+	printLast("          3 - data_stack");
+	printLast("          4 - return_stack");
+	printLast("          5 - vocabularies");
+	printLast("          6 - blk");
+	printLast("          7 - blocks")
+	printLast("          8 - word");
     }
     if (flag == 1) {
 	let start = dataStackPopCell();
 	let end   = dataStackPopCell();
-	console.log(memory.slice(start, end));
+	printValue(memory.slice(start, end));
     }
     if (flag == 2) {
-	console.log(asm_vocab);
+	printValue(asm_vocab);
     }
     if (flag == 3) {
-	console.log(data_stack);
+	printValue('p: ' + data_stack.p + ' arr: ' + data_stack.arr);
     }
     if (flag == 4) {
-	console.log(return_stack);
+	printValue(return_stack);
     }
     if (flag == 5) {
-	console.log(vocabularies);
+	printValue(vocabularies);
     }
     if (flag == 6) {
-	console.log(blk);
+	printValue(blk);
     }
     if (flag == 7) {
-	console.log(blocks);
+	printValue(blocks);
     }
     if (flag == 8) {
 	let word = readWord();
 	if (word == '') {
-	    console.log('Specify word');
+	    printValue('Specify word');
 	    return;
 	}
 	let word_addr = find_word(word);
 	if (word_addr == undefined) {
-	    console.log('Word not found: ' + word);
+	    printValue('Word not found: ' + word);
+	    return;
+	}
+
+	let exit_word = find_word('exit');
+	if (exit_word == undefined) {
+	    printValue('Word exit is not found');
 	    return;
 	}
 	
-	let exit_code_addr = code_pointer_addr(find_word('exit'));
+	let exit_code_addr = code_pointer_addr(exit_word);
 	let word_code_addr = code_pointer_addr(word_addr);
 	let output = '';
 	let cell = 0;
@@ -470,34 +522,33 @@ function dump () {
 	}
 	while (cell != exit_code_addr && cell != undefined);
 
-	console.log(output);
+	printValue(output);
     }
 }
 
 var fs = require('fs');
 
 function load (name) {
-    return new Promise(resolve => {
-	fs.readFile( __dirname + '/' + name, function (err, data) {
-	    if (err) {
-		throw err; 
-	    }
-	    let content = data.toString();
-	    let count = Math.ceil(content.length / 1024);
+    pause();
+    fs.readFile( __dirname + '/' + name, function (err, data) {
+	if (err) {
+	    throw err; 
+	}
+	let content = data.toString();
+	let count = Math.ceil(content.length / 1024);
 
-	    for (var i = 0; i < count; i++) {
-		let arr = [];
-		let str = content.substring(i * 1024, (i + 1) * 1024);
-		writeString(arr, 0, str);
-		blocks[i] = arr;
-	    }
+	for (var i = 0; i < count; i++) {
+	    let arr = [];
+	    let str = content.substring(i * 1024, (i + 1) * 1024);
+	    writeString(arr, 0, str);
+	    blocks[i] = arr;
+	}
 
-	    blk = 1;
-
-	    resolve();
-	});
+	blk = 1;
+	resume();
     });
 }
+
 
 function parseInteger (str) {
     for (var i = 0; i < str.length; i++) {
@@ -514,37 +565,22 @@ function parseInteger (str) {
 // implement word interpreter
 // write word to tib
 // first cell is a length of input
-async function word_interpreter () {
-    console.log("Welcome to forth interpreter prototype");
-    console.log("Type 'bye' to exit");
-
+function word_interpreter () {
     let message = '';
+    let word = readWord();
 
-    await load('core.f');
+    let count = 0;
 
     try {
-	while (true) {
-	    let word = readWord();
-
-	    //console.log('word', word, 'line', readString(tib, 0), 'tib', tib.slice(0, 7), 'blocks', blocks, 'blk', blk);
-
-	    if (word == '') {
-		console.log(message);
-		let line = await readLine();
-		writeString(tib, 0, line);
-		to_in = 0;
-	    }
-
+	while (!isOnPause && word != '') {
 	    let word_addr = find_word(word);
-	    if (word_addr != undefined && isImmediate(word_addr)) {
+	    if (word_addr != undefined && isImmediate(word_addr) && memory[1] == 0) {
 		returnStackPushCell(code_pointer_addr(word_addr));
-		await address_interpreter();
+		address_interpreter();
 		message = 'ok';
-		continue;
-	    }
-	    
-	    if (memory[0] == 0) {
+	    } else if (memory[0] == 0) {
 		if (word == 'bye') {
+		    process.exit();
 		    break;
 		} else if (word == 'dump') {
 		    dump();
@@ -560,7 +596,7 @@ async function word_interpreter () {
 			}
 		    } else {
 			returnStackPushCell(code_pointer_addr(word_addr));
-			await address_interpreter();
+			address_interpreter();
 			message = 'ok';
 		    }
 		} else {
@@ -574,8 +610,8 @@ async function word_interpreter () {
 			message = 'compiled';
 		    } else {
 			returnStackPushCell(code_pointer_addr(word_addr));
-			await address_interpreter();
-			message = 'ok'
+			address_interpreter();
+			message = 'ok';
 		    }
 		} else if (memory[2] != 0) {
 		    let word_addr = find_word(word);
@@ -586,6 +622,7 @@ async function word_interpreter () {
 			} else {
 			    writeNextCell(memory, 3);
 			    writeNextCell(memory, integer);
+			    message = 'compiled';
 			}
 		    } else {
 			writeNextCell(memory, 2);
@@ -596,11 +633,16 @@ async function word_interpreter () {
 		    throw 'What is compiling?!';
 		}
 	    }
+	    word = readWord();
 	}
     } catch (err) {
-	console.log("Error:", err);
+	console.log('Error: ' + err);
+	process.exit();
     }
-    process.exit();
+
+    printLast(' ' + message);
+    printOutput();
+    pause();
 }
 
 writeNextByte(memory, 0); 		// compilation state
@@ -612,40 +654,23 @@ writeNextByte(memory, 0);		// compilation vocabulary
 vocab("assembler");
 vocab("forth");
 
-// need to remember that last code is returnFromCode(<value>)
 asm_entry("code", `
 let name = env.readWord();
 if (name.trim() == '') {
     throw 'Empty string for name' ;
 }
-console.log('new code', name);
+env.printValue('a[' + name + ']');
 env.memory[0] = 1;
 env.memory[1] = { name: name, code: '' };
-returnFromCode();
 `);
 
 asm_entry('end-code', `
-if (!env.memory[1].code.includes('returnFromCode()')) {
-    throw 'returnFromCode() not found!!!';
-}
 env.asm_entry(env.memory[1].name, env.memory[1].code);
 env.memory[0] = 0;
 env.memory[1] = 0;
-returnFromCode();
 `);
 
-asm_entry('\\', `
-env.setToIn((Math.floor(env.getToIn() / 64) + 1) * 64);
-returnFromCode();
-`);
-
-
-word_interpreter();
-
-// code examples
-//
-// code tmp console.log('from tmp'); returnFromCode(); end-code
-// code tmp console.log('from tmp'); end-code
+asm_entry('\\', `env.setToIn((Math.floor(env.getToIn() / 64) + 1) * 64);`);
 
 // gforth
 
@@ -654,3 +679,9 @@ word_interpreter();
 
 // copy block: <from-block> <to-block> cp
 // clear block: <block> db
+
+// console.log("Welcome to forth interpreter prototype");
+// console.log("Type 'bye' to exit");
+// console.log();
+
+load('core.f');
