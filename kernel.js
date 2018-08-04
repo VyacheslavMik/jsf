@@ -585,7 +585,7 @@ function parseInteger (str) {
 // write word to tib
 // first cell is a length of input
 function word_interpreter () {
-    let message = '';
+    let message = 'ok';
     let word = readWord();
 
     let count = 0;
@@ -654,14 +654,15 @@ function word_interpreter () {
 	    }
 	    word = readWord();
 	}
+
+	printLast(' ' + message);
+	printOutput();
+	pause();
     } catch (err) {
 	console.log('Error: ' + err);
-	process.exit();
+	data_stack.p = 0;
+	return_stack.p = 0;
     }
-
-    printLast(' ' + message);
-    printOutput();
-    pause();
 }
 
 writeNextByte(memory, 0); 		// compilation state
@@ -699,8 +700,9 @@ asm_entry('\\', `env.setToIn((Math.floor(env.getToIn() / 64) + 1) * 64);`);
 // copy block: <from-block> <to-block> cp
 // clear block: <block> db
 
-// console.log("Welcome to forth interpreter prototype");
-// console.log("Type 'bye' to exit");
-// console.log();
+console.log("Welcome to forth interpreter prototype");
+console.log("Type 'bye' to exit");
+console.log();
+console.log();
 
 load('core.f');
