@@ -52,6 +52,76 @@ function stackPushCell (stack, value) {
     stack.p += 2;
 }
 
+// ------- double numbers ---------- 
+// Double numbers are represented on the stack
+// with the most-significant 16 bits (with sign) most
+// accessible.
+
+// Double numbers are represented in memory by two
+// consecutive 16-bit numbers.  The address of the least
+// significant 16 bits is two greater than the address of the
+// most significant 16 bits.
+function readMemoryDCell (arr, addr) {
+    let x = 0 | arr[addr];
+
+    x <<= 8;
+    x |= arr[addr + 1];
+
+    x <<= 8;
+    x |= arr[addr + 2];
+
+    x <<= 8;
+    x |= arr[addr + 3];
+
+    return x >>> 0;
+}
+
+function writeMemoryDCell (arr, addr, value) {
+    arr[addr + 3] = value & 255;
+    arr[addr + 2] = (value >> 8) & 255;
+    arr[addr + 1] = (value >> 16) & 255;
+    arr[addr] = (value >> 24) & 255;
+}
+
+function readStackDCell (arr, addr) {
+    let x = 0 | arr[addr + 2];
+
+    x <<= 8;
+    x |= arr[addr + 3];
+
+    x <<= 8;
+    x |= arr[addr];
+
+    x <<= 8;
+    x |= arr[addr + 1]
+
+    return x >>> 0;
+}
+
+function writeStackDCell (arr, addr, value) {
+    arr[addr + 1] = value & 255;
+    arr[addr] = (value >> 8) & 255;
+    arr[addr + 3] = (value >> 16) & 255;
+    arr[addr + 2] = (value >> 24) & 255;
+}
+
+function stackPopDCell (stack) {
+    if (stack.p <= 3)
+	throw stack.desc + " is underflow";
+    let value = readStackDCell(stack.arr, stack.p - 4);
+    stack.p -= 4;
+    return value;
+}
+
+function stackPushDCell (stack, value) {
+    if (stack.p + 4 >= stack.limit)
+	throw stack.desc + " is overflow";
+    writeStackDCell(stack.arr, stack.p, value)
+    stack.p += 4;
+}
+
+// ------- end double numbers ---------- 
+
 function stackPopCell (stack) {
     if (stack.p <= 1)
 	throw stack.desc + " is underflow";
@@ -699,6 +769,39 @@ asm_entry('\\', `env.setToIn((Math.floor(env.getToIn() / 64) + 1) * 64);`);
 
 // copy block: <from-block> <to-block> cp
 // clear block: <block> db
+
+// let arr = [0, 0, 0, 0];
+// //let x = 4294967295;
+// let x = -7;
+
+// console.log(x);
+
+// for (var i = arr.length - 1; i >= 0; i--) {
+//     arr[i] = x & 255;
+//     x >>= 8;
+// }
+
+// var z = 0;
+
+// for (var i = 0; i < arr.length; i++) {
+//     z <<= 8;
+//     z = z | arr[i];
+// }
+
+// console.log(arr, z, z >>> 0);
+
+// console.log('-----------');
+// let arr2 = [0, 0, 0, 0];
+// writeMemoryDCell(arr2, 0, 5);
+// console.log(arr2);
+// console.log(readMemoryDCell(arr2, 0));
+
+// console.log('-----------');
+// let arr3 = [0, 0, 0, 0];
+// writeStackDCell(arr3, 0, 2147483647);
+// console.log(arr3);
+// console.log(readStackDCell(arr3, 0));
+
 
 console.log("Welcome to forth interpreter prototype");
 console.log("Type 'bye' to exit");
