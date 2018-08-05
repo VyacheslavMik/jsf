@@ -226,13 +226,15 @@ function asmVocabPeek (addr) {
     return asm_vocab.arr[addr];
 }
 
-function dataStackPushByte (value) { stackPushByte(data_stack, value); }
-function dataStackPopByte  ()      { return stackPopByte(data_stack); }
-function dataStackPeekByte ()      { return stackPeekByte(data_stack); }
-function dataStackPushCell (value) { stackPushCell(data_stack, value); }
-function dataStackPopCell  ()      { return stackPopCell(data_stack); }
-function dataStackPopNum  ()       { return stackPopNum(data_stack); }
-function dataStackPeekCell ()      { return stackPeekCell(data_stack); }
+function dataStackPushByte  (value) { stackPushByte(data_stack, value);  }
+function dataStackPopByte   ()      { return stackPopByte(data_stack);   }
+function dataStackPeekByte  ()      { return stackPeekByte(data_stack);  }
+function dataStackPushCell  (value) { stackPushCell(data_stack, value);  }
+function dataStackPushDCell (value) { stackPushDCell(data_stack, value); }
+function dataStackPopCell   ()      { return stackPopCell(data_stack);   }
+function dataStackPopDCell  ()      { return stackPopDCell(data_stack);  }
+function dataStackPopNum    ()      { return stackPopNum(data_stack);    }
+function dataStackPeekCell  ()      { return stackPeekCell(data_stack);  }
 
 function returnStackPushByte (value) { stackPushByte(return_stack, value); }
 function returnStackPopByte  ()      { return stackPopByte(return_stack); }
@@ -450,7 +452,9 @@ let env = {memory:              memory,
 
 	   dataStackPopCell:    dataStackPopCell,
 	   dataStackPopNum:     dataStackPopNum,
+	   dataStackPopDCell:   dataStackPopDCell,
 	   dataStackPushCell:   dataStackPushCell,
+	   dataStackPushDCell:  dataStackPushDCell,
 	   dataStackPeekCell:   dataStackPeekCell,
 
 	   returnStackPopCell:  returnStackPopCell,
