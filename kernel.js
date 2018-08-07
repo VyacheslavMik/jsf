@@ -389,64 +389,9 @@ function printLast (v) {
     output_buffer += v + '\n';
 }
 
-function printOutput () {
-    // isPrintingOutput = true;
-    // readline.moveCursor(process.stdout, line_length, -1);
-    // rl.write(' ' + output_buffer);
-    // output_buffer = '';
-    // isPrintingOutput = false;
-}
-
-// process.stdin.on('readable', () => {
-//   const chunk = process.stdin.read();
-//   if (chunk !== null) {
-//     process.stdout.write(`data: ${chunk}`);
-//   }
-//     process.stdin.resume();
-// });
-
-// process.stdin.on('end', () => {
-//   process.stdout.write('end');
-// });
-
-// process.stdin.resume();
-
-//const readline = require('readline');
-//readline.emitKeypressEvents(process.stdin);
-// const rl = readline.createInterface({
-//     input: process.stdin,
-//     output: process.stdout,
-//     prompt: ''
-// });
-
-process.stdin.setRawMode(true);
-// process.stdin.on('keypress', (str, key) => {
-//     console.log(key);
-//     if (key.sequence.charCodeAt(0) == 3) {
-// 	process.exit()
-//     }; // for test reason
-
-//     if (key.sequence.charCodeAt(0) == 10) {
-//     	console.log();
-//     } else {
-//     	process.stdout.write(str);
-//     }
-
-//     process.stdin.read();
-
-//     // if (isWaitingKey) {
-//     // 	let dx = line_length + output_buffer.length + 1;
-//     // 	printOutput();
-//     // 	readline.moveCursor(process.stdout, -1, 0);
-//     // 	rl.write(' ');
-//     // 	readline.moveCursor(process.stdout, -1, 0);
-//     // 	dataStackPushCell(key.sequence.charCodeAt(0));
-//     // 	resume();
-//     // }
-// });
-
 const removeSeq = Buffer.from([8, 32, 8]);
 
+process.stdin.setRawMode(true);
 process.stdin.on('data', (chunk) => {
     if (chunk.length == 1) {
 	let c = chunk[0];
@@ -473,10 +418,6 @@ process.stdin.on('data', (chunk) => {
 	process.exit();
     }
 });
-
-// console.log(process.stdin.read());
-
-//process.stdin.resume();
 
 
 function printStack (stack) {
@@ -569,28 +510,6 @@ function asm_entry (name, code) {
     writeNextCell(memory, asm_vocab.p);
     asmVocabPush(makeAsm(code));
 }
-
-// rl.on('line', (line) => {
-//     if (!isPrintingOutput && !isWaitingKey) {
-// 	line_length = line.length;
-// 	writeString(tib, 0, line);
-// 	to_in = 0;
-// 	resume();
-//     }
-// });
-
-// create function pause and resume
-// In resume we start address_interpreter
-// then text_interpreter.
-// when we receive input we resume.
-// functions that need to wait need to execute
-// pause()
-// refactor functions address_interpreter and
-// text_interpreter to stop when pause.
-
-// use buffered output; firstly we store
-// data in buffer and then send output
-// DONE
 
 function address_interpreter () {
     while (return_stack.p > 0) {
@@ -852,42 +771,7 @@ asm_entry('\\', `env.setToIn((Math.floor(env.getToIn() / 64) + 1) * 64);`);
 // copy block: <from-block> <to-block> cp
 // clear block: <block> db
 
-// let arr = [0, 0, 0, 0];
-// //let x = 4294967295;
-// let x = -7;
-
-// console.log(x);
-
-// for (var i = arr.length - 1; i >= 0; i--) {
-//     arr[i] = x & 255;
-//     x >>= 8;
-// }
-
-// var z = 0;
-
-// for (var i = 0; i < arr.length; i++) {
-//     z <<= 8;
-//     z = z | arr[i];
-// }
-
-// console.log(arr, z, z >>> 0);
-
-// console.log('-----------');
-// let arr2 = [0, 0, 0, 0];
-// writeMemoryDCell(arr2, 0, 5);
-// console.log(arr2);
-// console.log(readMemoryDCell(arr2, 0));
-
-// console.log('-----------');
-// let arr3 = [0, 0, 0, 0];
-// writeStackDCell(arr3, 0, 2147483647);
-// console.log(arr3);
-// console.log(readStackDCell(arr3, 0));
-
-
-console.log("Welcome to forth interpreter prototype");
-console.log("Type 'bye' to exit");
-console.log();
-console.log();
+process.stdout.write('Welcome to forth interpreter prototype\n');
+process.stdout.write('Type \'bye\' to exit\n\n');
 
 load('core.f');
