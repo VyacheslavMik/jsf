@@ -16,6 +16,7 @@ let line_length = 0;
 let isPrintingOutput = false;
 
 let isOnPause = false;
+let isWaitingKey = false;
 
 function readCell (arr, addr) {
     return arr[addr] * 256 + arr[addr + 1];
@@ -318,7 +319,7 @@ function readWord () {
 
     for (; to_in < line.length; to_in++) {
     	let key = line.charCodeAt(to_in);
-    	if (key > 32) {
+    	if (key > 32 && key != 127) {
 	    break;
     	}
     }
@@ -376,30 +377,12 @@ function find_word (name) {
     return undefined;
 }
 
-const readline = require('readline');
-let receiveKey = undefined;
-readline.emitKeypressEvents(process.stdin);
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-    prompt: ''
-});
-process.stdin.setRawMode(true);
-process.stdin.on('keypress', (str, key) => {
-
-    if (key.sequence.charCodeAt(0) == 3) {
-	process.exit()
-    }; // for test reason
-
-    if (receiveKey != undefined) {
-	let handler = receiveKey;
-	receiveKey = undefined;
-	handler(key.sequence.charCodeAt(0));
-    }
-});
-
 function printValue (v) {
     output_buffer += ' ' + v;
+}
+
+function printChar (c) {
+    output_buffer += String.fromCharCode(c);
 }
 
 function printLast (v) {
@@ -407,12 +390,94 @@ function printLast (v) {
 }
 
 function printOutput () {
-    isPrintingOutput = true;
-    readline.moveCursor(process.stdout, line_length, -1);
-    rl.write(output_buffer);
-    output_buffer = '';
-    isPrintingOutput = false;
+    // isPrintingOutput = true;
+    // readline.moveCursor(process.stdout, line_length, -1);
+    // rl.write(' ' + output_buffer);
+    // output_buffer = '';
+    // isPrintingOutput = false;
 }
+
+// process.stdin.on('readable', () => {
+//   const chunk = process.stdin.read();
+//   if (chunk !== null) {
+//     process.stdout.write(`data: ${chunk}`);
+//   }
+//     process.stdin.resume();
+// });
+
+// process.stdin.on('end', () => {
+//   process.stdout.write('end');
+// });
+
+// process.stdin.resume();
+
+//const readline = require('readline');
+//readline.emitKeypressEvents(process.stdin);
+// const rl = readline.createInterface({
+//     input: process.stdin,
+//     output: process.stdout,
+//     prompt: ''
+// });
+
+process.stdin.setRawMode(true);
+// process.stdin.on('keypress', (str, key) => {
+//     console.log(key);
+//     if (key.sequence.charCodeAt(0) == 3) {
+// 	process.exit()
+//     }; // for test reason
+
+//     if (key.sequence.charCodeAt(0) == 10) {
+//     	console.log();
+//     } else {
+//     	process.stdout.write(str);
+//     }
+
+//     process.stdin.read();
+
+//     // if (isWaitingKey) {
+//     // 	let dx = line_length + output_buffer.length + 1;
+//     // 	printOutput();
+//     // 	readline.moveCursor(process.stdout, -1, 0);
+//     // 	rl.write(' ');
+//     // 	readline.moveCursor(process.stdout, -1, 0);
+//     // 	dataStackPushCell(key.sequence.charCodeAt(0));
+//     // 	resume();
+//     // }
+// });
+
+const removeSeq = Buffer.from([8, 32, 8]);
+
+process.stdin.on('data', (chunk) => {
+    if (chunk.length == 1) {
+	let c = chunk[0];
+	if (c == 3)  process.exit();
+	if (c == 13) {
+	    let count = tib.length;
+	    tib.unshift(0);
+	    tib.unshift(0);
+	    writeCell(tib, 0, count);
+
+	    resume();
+
+	    to_in = 0;
+	    tib = [];
+	} else if (c == 127) {
+	    tib.pop();
+	    process.stdout.write(removeSeq);
+	} else {
+	    tib.push(c);
+	    process.stdout.write(chunk);
+	}
+    } else {
+	process.stdout.write('Inserting not implemented yet');
+	process.exit();
+    }
+});
+
+// console.log(process.stdin.read());
+
+//process.stdin.resume();
+
 
 function printStack (stack) {
     let count = stack.p / 2;
@@ -425,6 +490,26 @@ function printStack (stack) {
     printValue(output);
 }
 
+function pause() {
+    isOnPause = true;
+}
+
+function resume() {
+    isOnPause = false;
+    isWaitingKey = false;
+    address_interpreter();
+    word_interpreter();
+
+    process.stdout.write(output_buffer);
+    process.stdout.write('\n');
+    output_buffer = '';
+}
+
+function waitKey() {
+    isWaitingKey = true;
+    isOnPause = true;
+}
+
 let env = {memory:              memory,
 	   rs:                  return_stack,
 	   ds:                  data_stack,
@@ -433,9 +518,14 @@ let env = {memory:              memory,
 	   asm_entry:           asm_entry,
 	   entry:               entry,
 
+	   pause:               pause,
+	   resume:              resume,
+	   waitKey:             waitKey,
+
 	   find_word:           find_word,
 	   printStack:          printStack,
 	   printValue:          printValue,
+	   printChar:           printChar,
 
 	   readCell:            readCell,
 	   writeCell:           writeCell,
@@ -480,24 +570,14 @@ function asm_entry (name, code) {
     asmVocabPush(makeAsm(code));
 }
 
-function pause() {
-    isOnPause = true;
-}
-
-function resume() {
-    isOnPause = false;
-    address_interpreter();
-    word_interpreter();
-}
-
-rl.on('line', (line) => {
-    if (!isPrintingOutput) {
-	line_length = line.length;
-	writeString(tib, 0, line);
-	to_in = 0;
-	resume();
-    }
-});
+// rl.on('line', (line) => {
+//     if (!isPrintingOutput && !isWaitingKey) {
+// 	line_length = line.length;
+// 	writeString(tib, 0, line);
+// 	to_in = 0;
+// 	resume();
+//     }
+// });
 
 // create function pause and resume
 // In resume we start address_interpreter
@@ -661,7 +741,6 @@ function parseInteger (str) {
 function word_interpreter () {
     let message = 'ok';
     let word = readWord();
-
     let count = 0;
 
     try {
@@ -730,7 +809,7 @@ function word_interpreter () {
 	}
 
 	printLast(' ' + message);
-	printOutput();
+	//printOutput();
 	pause();
     } catch (err) {
 	console.log('Error: ' + err);
