@@ -498,7 +498,7 @@ function resume() {
     isOnPause = false;
     isWaitingKey = false;
     address_interpreter();
-    word_interpreter();
+    text_interpreter();
 
     process.stdout.write(output_buffer);
     process.stdout.write('\n');
@@ -581,12 +581,12 @@ function asm_entry (name, code) {
 
 // create function pause and resume
 // In resume we start address_interpreter
-// then word_interpreter.
+// then text_interpreter.
 // when we receive input we resume.
 // functions that need to wait need to execute
 // pause()
 // refactor functions address_interpreter and
-// word_interpreter to stop when pause.
+// text_interpreter to stop when pause.
 
 // use buffered output; firstly we store
 // data in buffer and then send output
@@ -738,7 +738,7 @@ function parseInteger (str) {
 // implement word interpreter
 // write word to tib
 // first cell is a length of input
-function word_interpreter () {
+function text_interpreter () {
     let message = 'ok';
     let word = readWord();
     let count = 0;
@@ -808,8 +808,7 @@ function word_interpreter () {
 	    word = readWord();
 	}
 
-	printLast(' ' + message);
-	//printOutput();
+	printValue(message);
 	pause();
     } catch (err) {
 	console.log('Error: ' + err);
