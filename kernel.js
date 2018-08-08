@@ -378,7 +378,7 @@ function find_word (name) {
 }
 
 function printValue (v) {
-    output_buffer += ' ' + v;
+    output_buffer += v + ' ';
 }
 
 function printChar (c) {
@@ -389,6 +389,29 @@ function printLast (v) {
     output_buffer += v + '\n';
 }
 
+function printOutput () {
+    process.stdout.write(output_buffer);
+    output_buffer = '';
+}
+
+function pause() {
+    isOnPause = true;
+    printOutput();
+}
+
+function resume() {
+    isOnPause = false;
+    isWaitingKey = false;
+
+    address_interpreter();
+    text_interpreter();
+}
+
+function waitKey() {
+    pause();
+    isWaitingKey = true;
+}
+
 const removeSeq = Buffer.from([8, 32, 8]);
 
 process.stdin.setRawMode(true);
@@ -396,22 +419,28 @@ process.stdin.on('data', (chunk) => {
     if (chunk.length == 1) {
 	let c = chunk[0];
 	if (c == 3)  process.exit();
-	if (c == 13) {
-	    let count = tib.length;
-	    tib.unshift(0);
-	    tib.unshift(0);
-	    writeCell(tib, 0, count);
-
+	if (isWaitingKey) {
+	    dataStackPushCell(c);
 	    resume();
-
-	    to_in = 0;
-	    tib = [];
-	} else if (c == 127) {
-	    tib.pop();
-	    process.stdout.write(removeSeq);
 	} else {
-	    tib.push(c);
-	    process.stdout.write(chunk);
+	    if (c == 13) {
+		let count = tib.length;
+		tib.unshift(0);
+		tib.unshift(0);
+		writeCell(tib, 0, count);
+
+		output_buffer = ' ' + output_buffer;
+
+		if (!isWaitingKey) {
+		    resume();
+		}
+	    } else if (c == 127) {
+		tib.pop();
+		process.stdout.write(removeSeq);
+	    } else {
+		tib.push(c);
+		process.stdout.write(chunk);
+	    }
 	}
     } else {
 	process.stdout.write('Inserting not implemented yet');
@@ -429,26 +458,6 @@ function printStack (stack) {
 	output += ' ' + v;
     }
     printValue(output);
-}
-
-function pause() {
-    isOnPause = true;
-}
-
-function resume() {
-    isOnPause = false;
-    isWaitingKey = false;
-    address_interpreter();
-    text_interpreter();
-
-    process.stdout.write(output_buffer);
-    process.stdout.write('\n');
-    output_buffer = '';
-}
-
-function waitKey() {
-    isWaitingKey = true;
-    isOnPause = true;
 }
 
 let env = {memory:              memory,
@@ -620,7 +629,7 @@ function dump () {
 
 var fs = require('fs');
 
-function load (name) {
+function use (name) {
     pause();
     fs.readFile( __dirname + '/' + name, function (err, data) {
 	if (err) {
@@ -641,7 +650,6 @@ function load (name) {
     });
 }
 
-
 function parseInteger (str) {
     for (var i = 0; i < str.length; i++) {
 	if (i == 0 && str[i] == '-') {
@@ -660,7 +668,6 @@ function parseInteger (str) {
 function text_interpreter () {
     let message = 'ok';
     let word = readWord();
-    let count = 0;
 
     try {
 	while (!isOnPause && word != '') {
@@ -724,11 +731,17 @@ function text_interpreter () {
 		    throw 'What is compiling?!';
 		}
 	    }
-	    word = readWord();
+	    if (!isOnPause) {
+		word = readWord();
+	    }
 	}
 
-	printValue(message);
-	pause();
+	if (!isOnPause) {
+	    printLast(' ' + message);
+	    pause();
+	    to_in = 0;
+	    tib = [];
+	}
     } catch (err) {
 	console.log('Error: ' + err);
 	data_stack.p = 0;
@@ -774,4 +787,4 @@ asm_entry('\\', `env.setToIn((Math.floor(env.getToIn() / 64) + 1) * 64);`);
 process.stdout.write('Welcome to forth interpreter prototype\n');
 process.stdout.write('Type \'bye\' to exit\n\n');
 
-load('core.f');
+use('core.f');
