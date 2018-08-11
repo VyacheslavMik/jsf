@@ -744,6 +744,9 @@ function text_interpreter () {
 	}
     } catch (err) {
 	console.log('Error: ' + err);
+	to_in = 0;
+	tib = [];
+	writeByte(memory, 0, 0);
 	data_stack.p = 0;
 	return_stack.p = 0;
     }
