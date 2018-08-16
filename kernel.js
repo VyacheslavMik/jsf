@@ -383,7 +383,7 @@ function isBufferUpdated () {
 
 function save_buffers () {
     if (isBufferUpdated()) {
-	let blk = readByte(memory, block_number_pos) - 1;
+	let blk = readByte(memory, buffer_block_pos) - 1;
 	let arr = [];
 	for (let i = 0; i < 1024; i++) {
 	    let c = 32;
@@ -409,6 +409,9 @@ function buffer_update () {
 
 function block () {
     let u = dataStackPopCell();
+
+    if (u == 0) throw '0 block is denied';
+    
     let blk = readByte(memory, buffer_block_pos);
 
     if (u != blk) {
@@ -545,6 +548,7 @@ let env = {memory:              memory,
 	   rs:                  return_stack,
 	   ds:                  data_stack,
 	   vocabularies:        vocabularies,
+	   here:                0,
 
 	   asm_entry:           asm_entry,
 	   entry:               entry,
@@ -718,6 +722,8 @@ function use (name) {
     pause();
 
     blocks = [];
+    writeByte(memory, buffer_block_pos, 0);
+    writeByte(memory, block_number_pos, 0);
 
     file_name = __dirname + '/' + name;
     if (!fs.existsSync(file_name)) {
