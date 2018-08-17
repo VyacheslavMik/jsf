@@ -301,11 +301,11 @@ function vocab (name) {
 
 function entry (name) {
     let lastWord = vocabularies[0].word;
-    vocabularies[0].word = memory.length;
+    vocabularies[0].word = env.dp;
 
-    writeNextByte(memory, 0);           // flags
-    writeNextCell(memory, lastWord);    // link to previous word
-    writeNextString(memory, name);      // word name
+    memWriteNextByte(0);           // flags
+    memWriteNextCell(lastWord);    // link to previous word
+    memWriteNextString(name);      // word name
 }
 
 function isControlChar(c) {
@@ -544,11 +544,29 @@ function printStack (stack) {
     printValue(output);
 }
 
+function memWriteNextByte (value) {
+    writeByte(memory, env.dp, value);
+    env.dp += 1;
+}
+
+function memWriteNextCell (value) {
+    writeCell(memory, env.dp, value);
+    env.dp += 2;
+}
+
+function memWriteNextString (value) {
+    memWriteNextCell(value.length);
+    let count = value.length & 0xFFFFFFFF;
+    for (let i = 0; i < count; i++) {
+	memWriteNextByte(value.charCodeAt(i));
+    }
+}
+
 let env = {memory:              memory,
 	   rs:                  return_stack,
 	   ds:                  data_stack,
 	   vocabularies:        vocabularies,
-	   here:                0,
+	   dp:                  0,
 
 	   asm_entry:           asm_entry,
 	   entry:               entry,
@@ -569,8 +587,9 @@ let env = {memory:              memory,
 	   readByte:            readByte,
 	   writeByte:           writeByte,
 
-	   writeNextByte:       writeNextByte,
-	   writeNextCell:       writeNextCell,
+	   memWriteNextByte:    memWriteNextByte,
+	   memWriteNextCell:    memWriteNextCell,
+	   memWriteNextString:  memWriteNextString,
 
 	   code_pointer_addr:   code_pointer_addr,
 
@@ -604,8 +623,8 @@ function makeAsm (str) {
 function asm_entry (name, code) {
     vocab("assembler");
     entry(name);
-    writeNextCell(memory, 1);
-    writeNextCell(memory, asm_vocab.p);
+    memWriteNextCell(1);
+    memWriteNextCell(asm_vocab.p);
     asmVocabPush(makeAsm(code));
 }
 
@@ -839,13 +858,13 @@ function text_interpreter () {
 			if (integer == undefined) {
 			    throw 'Word is not found: ' + word;
 			} else {
-			    writeNextCell(memory, 3);
-			    writeNextCell(memory, integer);
+			    memWriteNextCell(3);
+			    memWriteNextCell(integer);
 			    message = 'compiled';
 			}
 		    } else {
-			writeNextCell(memory, 2);
-			writeNextCell(memory, code_pointer_addr(word_addr));
+			memWriteNextCell(2);
+			memWriteNextCell(code_pointer_addr(word_addr));
 			message = 'compiled';
 		    }
 		} else {
@@ -872,36 +891,36 @@ function text_interpreter () {
     }
 }
 
-writeNextByte(memory, 0); 		// compilation state
-writeNextByte(memory, 0);		// first byte is empty and define an assembler word;
-writeNextByte(memory, 0);		// second byte is empty and define an execute word;
-writeNextByte(memory, 0);		// third byte is empty and define an literal word;
-writeNextCell(memory, 0);		// compilation vocabulary
+memWriteNextByte(0); 		// compilation state
+memWriteNextByte(0);		// first byte is empty and define an assembler word;
+memWriteNextByte(0);		// second byte is empty and define an execute word;
+memWriteNextByte(0);		// third byte is empty and define an literal word;
+memWriteNextCell(0);		// compilation vocabulary
 
-to_in_pos = memory.length;
-writeNextCell(memory, 0);               // >in
+to_in_pos = env.dp;
+memWriteNextCell(0);               // >in
 
-number_tib_pos = memory.length;
-writeNextCell(memory, 0);
+number_tib_pos = env.dp;
+memWriteNextCell(0);
 
-tib_pos = memory.length;
+tib_pos = env.dp;
 for (let i = 0; i < 1024; i++) {        // tib
-    writeNextByte(memory, 0);
+    memWriteNextByte(0);
 }
 
-buffer_pos = memory.length;
+buffer_pos = env.dp;
 for (let i = 0; i < 1024; i++) {        // buffer
-    writeNextByte(memory, 0);
+    memWriteNextByte(0);
 }
 
-buffer_state_pos = memory.length;
-writeNextByte(memory, 0);               // buffer state
+buffer_state_pos = env.dp;
+memWriteNextByte(0);               // buffer state
 
-buffer_block_pos = memory.length;
-writeNextByte(memory, 0);               // buffer block state
+buffer_block_pos = env.dp;
+memWriteNextByte(0);               // buffer block state
 
-block_number_pos = memory.length;
-writeNextByte(memory, 0);               // block number
+block_number_pos = env.dp;
+memWriteNextByte(0);               // block number
 
 vocab("assembler");
 vocab("forth");
