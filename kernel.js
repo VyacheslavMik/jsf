@@ -883,9 +883,11 @@ function text_interpreter () {
 	    writeCell(memory, number_tib_pos, 0);
 	}
     } catch (err) {
+	printOutput();
 	console.log('Error: ' + err);
 	writeCell(memory, number_tib_pos, 0);
 	writeCell(memory, to_in_pos,  0);
+	writeByte(memory, block_number_pos, 0);
 	writeByte(memory, 0, 0);
 	data_stack.p = 0;
 	return_stack.p = 0;
@@ -962,8 +964,10 @@ process.stdout.write('Type \'bye\' to exit\n\n');
 
 use('core.f');
 
-env.number_tib_pos = number_tib_pos;
-env.to_in_pos      = to_in_pos;
+env.number_tib_pos   = number_tib_pos;
+env.to_in_pos        = to_in_pos;
+env.block_number_pos = block_number_pos;
+env.tib_pos          = tib_pos;
 
 let arr = [];
 writeString(arr, 0, '1 load');
