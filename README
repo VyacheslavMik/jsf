@@ -6,3 +6,25 @@
 ## REQUIRED WORD SET
 ### Implemented:
 * @, !, c@, c!, .
+
+((do
+ (require '[clojure.string :as str])
+ (fn not-implemented [s1 s2]
+     (let [words1 (-> s1
+		      (str/replace "Nucleus layer" "")
+		      (str/replace "Device layer" "")
+		      (str/replace "Interpreter layer" "")
+		      (str/replace "Compiler layer" "")
+		      (str/split #"[ \t\n]+")
+		      (->>
+		       (remove str/blank?)
+		       (map str/lower-case)))
+		  words2 (-> s2
+			     (str/replace "ok" "")
+			     (str/split #"[ \t\n]+")
+			     (->>
+			      (remove str/blank?)
+			      (map str/lower-case)
+			      (map (fn [s] (apply str (butlast (drop 2 s))))))
+			     (set))]
+       (str/join " " (remove words2 words1))))) "" "")
