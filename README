@@ -7,24 +7,29 @@
 ### Implemented:
 * @, !, c@, c!, .
 
-((do
- (require '[clojure.string :as str])
- (fn not-implemented [s1 s2]
+### not implemented:
+d+ d< dnegate # #> #s ( -trailing .( <# base convert decimal definitions find forget forth hold load sign .\" abort\" repeat state vocabulary while ['] [compile] ]
+
+Clojure code for finding not implementing words.
+
+```clj
+((fn not-implemented [s1 s2]
      (let [words1 (-> s1
-		      (str/replace "Nucleus layer" "")
-		      (str/replace "Device layer" "")
-		      (str/replace "Interpreter layer" "")
-		      (str/replace "Compiler layer" "")
-		      (str/split #"[ \t\n]+")
+		      (clojure.string/replace "Nucleus layer" "")
+		      (clojure.string/replace "Device layer" "")
+		      (clojure.string/replace "Interpreter layer" "")
+		      (clojure.string/replace "Compiler layer" "")
+		      (clojure.string/split #"[ \t\n]+")
 		      (->>
-		       (remove str/blank?)
-		       (map str/lower-case)))
+		       (remove clojure.string/blank?)
+		       (map clojure.string/lower-case)))
 		  words2 (-> s2
-			     (str/replace "ok" "")
-			     (str/split #"[ \t\n]+")
+			     (clojure.string/replace "ok" "")
+			     (clojure.string/split #"[ \t\n]+")
 			     (->>
-			      (remove str/blank?)
-			      (map str/lower-case)
+			      (remove clojure.string/blank?)
+			      (map clojure.string/lower-case)
 			      (map (fn [s] (apply str (butlast (drop 2 s))))))
 			     (set))]
-       (str/join " " (remove words2 words1))))) "" "")
+       (clojure.string/join " " (remove words2 words1)))) "" "")
+```

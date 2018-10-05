@@ -103,6 +103,26 @@ function readStackDCell (arr, addr) {
     return x >>> 0;
 }
 
+function readStackDCellNum (arr, addr) {
+    var sign = arr[addr + 2] & (1 << 7);
+    let x = 0 | arr[addr + 2];
+
+    x <<= 8;
+    x |= arr[addr + 3];
+
+    x <<= 8;
+    x |= arr[addr];
+
+    x <<= 8;
+    x |= arr[addr + 1]
+
+    if (sign) {
+	x = 0xFFFF000000000000 | x;  // fill in most significant bits with 1's
+    }
+
+    return x;
+}
+
 function writeStackDCell (arr, addr, value) {
     arr[addr + 1] = value & 255;
     arr[addr] = (value >> 8) & 255;
@@ -114,6 +134,14 @@ function stackPopDCell (stack) {
     if (stack.p <= 3)
 	throw stack.desc + " is underflow";
     let value = readStackDCell(stack.arr, stack.p - 4);
+    stack.p -= 4;
+    return value;
+}
+
+function stackPopDCellNum (stack) {
+    if (stack.p <= 3)
+	throw stack.desc + " is underflow";
+    let value = readStackDCellNum(stack.arr, stack.p - 4);
     stack.p -= 4;
     return value;
 }
@@ -231,22 +259,23 @@ function asmVocabPeek (addr) {
     return asm_vocab.arr[addr];
 }
 
-function dataStackPushByte  (value) { stackPushByte(data_stack, value);  }
-function dataStackPopByte   ()      { return stackPopByte(data_stack);   }
-function dataStackPeekByte  ()      { return stackPeekByte(data_stack);  }
-function dataStackPushCell  (value) { stackPushCell(data_stack, value);  }
-function dataStackPushDCell (value) { stackPushDCell(data_stack, value); }
-function dataStackPopCell   ()      { return stackPopCell(data_stack);   }
-function dataStackPopDCell  ()      { return stackPopDCell(data_stack);  }
-function dataStackPopNum    ()      { return stackPopNum(data_stack);    }
-function dataStackPeekCell  ()      { return stackPeekCell(data_stack);  }
+function dataStackPushByte     (value) { stackPushByte(data_stack, value);     }
+function dataStackPopByte      ()      { return stackPopByte(data_stack);      }
+function dataStackPeekByte     ()      { return stackPeekByte(data_stack);     }
+function dataStackPushCell     (value) { stackPushCell(data_stack, value);     }
+function dataStackPushDCell    (value) { stackPushDCell(data_stack, value);    }
+function dataStackPopCell      ()      { return stackPopCell(data_stack);      }
+function dataStackPopDCell     ()      { return stackPopDCell(data_stack);     }
+function dataStackPopDCellNum  ()      { return stackPopDCellNum(data_stack);  }
+function dataStackPopNum       ()      { return stackPopNum(data_stack);       }
+function dataStackPeekCell     ()      { return stackPeekCell(data_stack);     }
 
-function returnStackPushByte (value) { stackPushByte(return_stack, value); }
-function returnStackPopByte  ()      { return stackPopByte(return_stack); }
-function returnStackPeekByte ()      { return stackPeekByte(return_stack); }
-function returnStackPushCell (value) { stackPushCell(return_stack, value); }
-function returnStackPopCell  ()      { return stackPopCell(return_stack); }
-function returnStackPeekCell ()      { return stackPeekCell(return_stack); }
+function returnStackPushByte   (value) { stackPushByte(return_stack, value);   }
+function returnStackPopByte    ()      { return stackPopByte(return_stack);    }
+function returnStackPeekByte   ()      { return stackPeekByte(return_stack);   }
+function returnStackPushCell   (value) { stackPushCell(return_stack, value);   }
+function returnStackPopCell    ()      { return stackPopCell(return_stack);    }
+function returnStackPeekCell   ()      { return stackPeekCell(return_stack);   }
 
 function isWord (addr) {
     // TODO: need to implement this
@@ -562,55 +591,56 @@ function memWriteNextString (value) {
     }
 }
 
-let env = {memory:              memory,
-	   rs:                  return_stack,
-	   ds:                  data_stack,
-	   vocabularies:        vocabularies,
-	   dp:                  0,
+let env = {memory:               memory,
+	   rs:                   return_stack,
+	   ds:                   data_stack,
+	   vocabularies:         vocabularies,
+	   dp:                   0,
 
-	   asm_entry:           asm_entry,
-	   entry:               entry,
+	   asm_entry:            asm_entry,
+	   entry:                entry,
 
-	   pause:               pause,
-	   resume:              resume,
-	   waitKey:             waitKey,
-	   backslash:           backslash,
+	   pause:                pause,
+	   resume:               resume,
+	   waitKey:              waitKey,
+	   backslash:            backslash,
 
-	   find_word:           find_word,
-	   printStack:          printStack,
-	   printValue:          printValue,
-	   printChar:           printChar,
+	   find_word:            find_word,
+	   printStack:           printStack,
+	   printValue:           printValue,
+	   printChar:            printChar,
 
-	   readCell:            readCell,
-	   writeCell:           writeCell,
+	   readCell:             readCell,
+	   writeCell:            writeCell,
 
-	   readByte:            readByte,
-	   writeByte:           writeByte,
+	   readByte:             readByte,
+	   writeByte:            writeByte,
 
-	   memWriteNextByte:    memWriteNextByte,
-	   memWriteNextCell:    memWriteNextCell,
-	   memWriteNextString:  memWriteNextString,
+	   memWriteNextByte:     memWriteNextByte,
+	   memWriteNextCell:     memWriteNextCell,
+	   memWriteNextString:   memWriteNextString,
 
-	   code_pointer_addr:   code_pointer_addr,
+	   code_pointer_addr:    code_pointer_addr,
 
-	   dataStackPopCell:    dataStackPopCell,
-	   dataStackPopNum:     dataStackPopNum,
-	   dataStackPopDCell:   dataStackPopDCell,
-	   dataStackPushCell:   dataStackPushCell,
-	   dataStackPushDCell:  dataStackPushDCell,
-	   dataStackPeekCell:   dataStackPeekCell,
+	   dataStackPopCell:     dataStackPopCell,
+	   dataStackPopNum:      dataStackPopNum,
+	   dataStackPopDCell:    dataStackPopDCell,
+	   dataStackPopDCellNum: dataStackPopDCellNum,
+	   dataStackPushCell:    dataStackPushCell,
+	   dataStackPushDCell:   dataStackPushDCell,
+	   dataStackPeekCell:    dataStackPeekCell,
 
-	   returnStackPopCell:  returnStackPopCell,
-	   returnStackPushCell: returnStackPushCell,
-	   returnStackPeekCell: returnStackPeekCell,
+	   returnStackPopCell:   returnStackPopCell,
+	   returnStackPushCell:  returnStackPushCell,
+	   returnStackPeekCell:  returnStackPeekCell,
 
-	   block:               block,
-	   save_buffers:        save_buffers,
-	   buffer_update:       buffer_update,
-	   flush:               flush,
-	   load:                load,
-	   use:                 use,
-	   readWord:            readWord};
+	   block:                block,
+	   save_buffers:         save_buffers,
+	   buffer_update:        buffer_update,
+	   flush:                flush,
+	   load:                 load,
+	   use:                  use,
+	   readWord:             readWord};
 
 function execAsm (fn) {
     fn(env);
