@@ -531,33 +531,40 @@ function waitKey() {
 
 const removeSeq = Buffer.from([8, 32, 8]);
 
+function processChar(c) {
+    if (c == 3)  process.exit();
+    if (isWaitingKey) {
+	dataStackPushCell(c);
+	resume();
+    } else {
+	if (c == 13) {
+	    output_buffer = ' ' + output_buffer;
+
+	    if (!isWaitingKey) {
+		resume();
+	    }
+	} else if (c == 127) {
+	    let ntib = readCell(memory, number_tib_pos);
+	    if (ntib > 0) {
+		writeCell(memory, number_tib_pos, ntib - 1);
+	    }
+	    process.stdout.write(removeSeq);
+	} else {
+	    writeByte(memory, tib_pos + readCell(memory, number_tib_pos), c);
+	    writeCell(memory, number_tib_pos, readCell(memory, number_tib_pos) + 1);
+	    process.stdout.write(String.fromCharCode(c));
+	}
+    }
+}
+
 process.stdin.setRawMode(true);
 process.stdin.on('data', (chunk) => {
     if (chunk.length == 1) {
-	let c = chunk[0];
-	if (c == 3)  process.exit();
-	if (isWaitingKey) {
-	    dataStackPushCell(c);
-	    resume();
-	} else {
-	    if (c == 13) {
-		output_buffer = ' ' + output_buffer;
-
-		if (!isWaitingKey) {
-		    resume();
-		}
-	    } else if (c == 127) {
-		writeCell(memory, number_tib_pos, readCell(memory, number_tib_pos) - 1);
-		process.stdout.write(removeSeq);
-	    } else {
-		writeByte(memory, tib_pos + readCell(memory, number_tib_pos), c);
-		writeCell(memory, number_tib_pos, readCell(memory, number_tib_pos) + 1);
-		process.stdout.write(chunk);
-	    }
-	}
+	processChar(chunk[0]);
     } else {
-	process.stdout.write('Inserting not implemented yet');
-	process.exit();
+	for (let i = 0; i < chunk.length; i++) {
+	    processChar(chunk[i]);
+	}
     }
 });
 
