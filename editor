@@ -1,0 +1,2 @@
+#!/bin/bash
+gforth -e 'use blocked.fb 1 load editor use core.f'
