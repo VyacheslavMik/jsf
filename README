@@ -33,3 +33,16 @@ Clojure code for finding not implementing words.
 			     (set))]
        (clojure.string/join " " (remove words2 words1)))) "" "")
 ```
+
+```bash
+gforth
+```
+
+```forth
+use blocked.fb 1 load editor use core.f
+```
+
+```forth
+copy block: <from-block> <to-block> cp
+clear block: <block> db
+```

@@ -988,14 +988,6 @@ function backslash () {
 asm_entry('\\', `env.backslash();`);
 asm_entry('load', `env.load();`);
 
-// gforth
-
-// use blocked.fb 1 load editor
-// use /Users/vyacheslavmikushev/Work/jsf/core.f
-
-// copy block: <from-block> <to-block> cp
-// clear block: <block> db
-
 process.stdout.write('Welcome to forth interpreter prototype\n');
 process.stdout.write('Type \'bye\' to exit\n\n');
 
