@@ -1,5 +1,5 @@
 ### Not implemented:
-d+ d< dnegate # #> #s ( -trailing .( <# base convert decimal definitions find forget forth hold load sign .\" abort\" repeat state vocabulary while ['] [compile] ]
+# #> #s <# base convert decimal definitions find forget forth hold sign .\" abort\" repeat vocabulary while
 
 ### Other
 Clojure code for finding not implementing words.
