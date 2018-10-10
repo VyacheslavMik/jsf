@@ -1,3 +1,0 @@
-#!/bin/bash
-
-cp core.f core.f.pretty && gforth -e 'use core.f.pretty : line-ends!  block  17 1 do  dup i 64 * 1- + 10 swap c! loop  drop ; : file-line-ends!  34 0 do i . i line-ends! update flush loop ; file-line-ends! bye' && git add . && git commit -m $1
