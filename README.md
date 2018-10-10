@@ -1,5 +1,5 @@
 ### Not implemented:
-# #> #s <# base convert decimal definitions find forget forth hold sign .\" abort\" repeat vocabulary while
+"# #> #s <# base convert decimal definitions find forget forth hold sign abort\" vocabulary"
 
 ### Other
 Clojure code for finding not implementing words.
