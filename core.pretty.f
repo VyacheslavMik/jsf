@@ -567,10 +567,10 @@ code vocab
 end-code                                                       
                                                                
 : vocabulary-name  32 word count dup >in @ swap - 1 - >in !  ; 
-: vocabulary-name!  dup 1 + allot  here rot rot  dup c,        
-   cmove> ;                                                    
+: vocabulary-name!  dup ,  here swap  dup allot  cmove>  ;     
 : vocabulary  vocabulary-name  create  vocabulary-name!        
    does>  vocab  ;                                             
+                                                               
                                                                
                                                                
                                                                
