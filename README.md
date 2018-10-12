@@ -1,5 +1,5 @@
 ### Not implemented:
-"# #> #s <# base convert decimal definitions find forget forth hold sign abort\" vocabulary"
+"# #> #s <# base convert decimal definitions find forget forth hold sign abort\" vocabulary context current assembler end- 2over 2rot 2swap d- d0= d2/ dabs dmax dmin du< d.r 2constant 2variable"
 
 ### Other
 Clojure code for finding not implementing words.
@@ -8,7 +8,10 @@ Clojure code for finding not implementing words.
 ((fn not-implemented [s1 s2]
      (let [words1 (-> s1
 		      (clojure.string/replace "Nucleus layer" "")
+		      (clojure.string/replace "none" "")
 		      (clojure.string/replace "LOAD" "")
+		      (clojure.string/replace "CODE" "")
+		      (clojure.string/replace "END-CODE" "")
 		      (clojure.string/replace "Device layer" "")
 		      (clojure.string/replace "Interpreter layer" "")
 		      (clojure.string/replace "Compiler layer" "")
@@ -43,7 +46,47 @@ SPAN  TIB  U.  WORD
              	+LOOP  ,  .\"  :  ;  ABORT\"  ALLOT  BEGIN  COMPILE  CONSTANT  
 CREATE  DO  DOES>  ELSE  IF  IMMEDIATE  LEAVE  LITERAL  LOOP  
 REPEAT  STATE  THEN  UNTIL  VARIABLE  VOCABULARY  WHILE    
-[']  [COMPILE]  ] " "")
+[']  [COMPILE]  ] 
+          Nucleus layer 
+             	BRANCH  ?BRANCH 
+          Device layer 
+
+               none
+
+
+          Interpreter layer 
+             	CONTEXT  CURRENT 
+          Compiler layer 
+             	<MARK  <RESOLVE  >MARK  >RESOLVE 
+
+          Nucleus layer 
+
+               none
+
+
+          Device layer 
+
+               none
+
+
+          Interpreter layer 
+             	ASSEMBLER 
+          Compiler layer 
+             	;CODE  CODE  END-CODE 
+
+          Nucleus layer 
+             	2!  2@  2DROP  2DUP  2OVER  2ROT  2SWAP  D+  D-  D0=  D2/  
+D<  D=  DABS  DMAX  DMIN  DNEGATE  DU< 
+          Device layer 
+
+               none
+
+
+          Interpreter layer 
+             	D.  D.R 
+          Compiler layer 
+             	2CONSTANT  2VARIABLE 
+" "")
 ```
 
 

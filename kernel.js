@@ -598,6 +598,10 @@ function memWriteNextString (value) {
     }
 }
 
+function memReadString(addr) {
+    return readString(memory, addr);
+}
+
 let env = {memory:               memory,
 	   rs:                   return_stack,
 	   ds:                   data_stack,
@@ -626,6 +630,8 @@ let env = {memory:               memory,
 	   memWriteNextByte:     memWriteNextByte,
 	   memWriteNextCell:     memWriteNextCell,
 	   memWriteNextString:   memWriteNextString,
+
+	   memReadString:        memReadString,
 
 	   code_pointer_addr:    code_pointer_addr,
 

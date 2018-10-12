@@ -493,16 +493,16 @@ code tib  env.dataStackPushCell(env.tib_pos);  end-code
 : input-limit   blk c@ dup if block 1024 else drop #tib @ tib  
    then +  ;                                                   
 : input-next-char   input-stream >in @ 1 + +  dup              
-   input-limit >= if drop 0 else 1 then  ;                     
+   input-limit >= if drop 0 else -1 then  ;                    
 \ words: word skip-char wait-char                              
                                                                
-: skip-char    begin dup input-next-char  dup if               
-   drop  c@ = 1 >in +! then  until  ;                          
-: wait-char   begin dup input-next-char  dup if                
-   drop  c@ = not  1 >in +! then  until  ;                     
-: word   skip-char  >in @ swap  wait-char drop >in @           
-   1 >in +!  over - dup  pad c!  swap input-stream + swap      
-   pad 1 + swap  cmove>  pad ;                                 
+: skip-char   begin dup input-next-char  if  c@ = 1 >in +!     
+   else 2drop 0 exit then  until  ;                            
+: wait-char   begin dup input-next-char  if c@ = not  1 >in +! 
+   else 2drop 1 >in +!  0 exit then  until  1 >in +!  ;        
+: word   skip-char  >in @ swap  dup if wait-char then  if >in @
+   1 - else >in @ then over - dup  pad c!  swap input-stream + 
+   swap  pad 1 + swap  cmove>  pad ;                           
                                                                
                                                                
                                                                
@@ -558,3 +558,19 @@ end-code
    dup allot cmove> ; immediate                                
 : while   compile ?branch  >mark  ; immediate                  
 : repeat  swap <resolve >resolve  ; immediate                  
+\ words: vocab vocabulary                                      
+                                                               
+code vocab                                                     
+  let addr = env.dataStackPopCell();                           
+  let s = env.memReadString(addr);                             
+  console.log(s);                                              
+end-code                                                       
+                                                               
+: vocabulary-name  32 word count dup >in @ swap - 1 - >in !  ; 
+: vocabulary-name!  dup 1 + allot  here rot rot  dup c,        
+   cmove> ;                                                    
+: vocabulary  vocabulary-name  create  vocabulary-name!        
+   does>  vocab  ;                                             
+                                                               
+                                                               
+                                                               
