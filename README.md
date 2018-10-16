@@ -1,5 +1,5 @@
 ### Not implemented:
-"# #> #s <# base convert decimal definitions find forget forth hold sign abort\" vocabulary context current assembler end- 2over 2rot 2swap d- d0= d2/ dabs dmax dmin du< d.r 2constant 2variable"
+"# #> #s <# base convert decimal find forget hold sign abort\" context current end- 2over 2rot 2swap d- d0= d2/ dabs dmax dmin du< d.r 2constant 2variable"
 
 ### Other
 Clojure code for finding not implementing words.

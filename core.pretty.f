@@ -11,7 +11,7 @@ code use   let file = env.readWord(); env.use(file);   end-code
 11 load 12 load 13 load 14 load 15 load 16 load 17 load 18 load
 19 load 20 load 21 load 22 load 23 load 24 load 25 load 26 load
 27 load 28 load 29 load 30 load 31 load 32 load 33 load 34 load
-35 load 36 load                                                
+35 load 36 load 37 load                                        
                                                                
                                                                
 \ words: exit >=                                               
@@ -574,3 +574,19 @@ code definitions  env.definitions()  end-code
 vocabulary forth                                               
 s" assembler" dup dup dup pad + 1+ ! pad + 3 + swap cmove>     
 pad count + vocab definitions vocabulary assembler             
+\ words: abort" (abort")                                       
+                                                               
+forth definitions                                              
+: (abort")  if r> count type abort else r> count + >r then ;   
+: abort"  compile (abort") 34 word count  dup c,  here swap    
+   dup allot cmove> ; immediate                                
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
