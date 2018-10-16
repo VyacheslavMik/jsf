@@ -177,7 +177,7 @@ end-code
 \ words: immediate ;                                           
                                                                
 code immediate                                                 
-  w = env.vocabularies[0].word;                                
+  w = env.compilation_vocabulary.word;                         
   env.memory[w] = 1;                                           
 end-code                                                       
                                                                
@@ -214,7 +214,7 @@ end-code
                                                                
 code does>                                                     
   code_pointer = env.returnStackPopCell();                     
-  w = env.vocabularies[0].word;                                
+  w = env.compilation_vocabulary.word;                         
   pf = env.code_pointer_addr(w);                               
   env.writeCell(env.memory, pf + 6, code_pointer);             
 end-code                                                       
@@ -558,19 +558,19 @@ end-code
    dup allot cmove> ; immediate                                
 : while   compile ?branch  >mark  ; immediate                  
 : repeat  swap <resolve >resolve  ; immediate                  
-\ words: vocab vocabulary                                      
-                                                               
+\ words: vocab vocabulary vocabulary-name vocabulary-name!     
+\        definitions assembler forth                           
 code vocab                                                     
   let addr = env.dataStackPopCell();                           
   let s = env.memReadString(addr);                             
-  console.log(s);                                              
+  env.vocab(s);                                                
 end-code                                                       
                                                                
 : vocabulary-name  32 word count dup >in @ swap - 1 - >in !  ; 
 : vocabulary-name!  dup ,  here swap  dup allot  cmove>  ;     
 : vocabulary  vocabulary-name  create  vocabulary-name!        
    does>  vocab  ;                                             
-                                                               
-                                                               
-                                                               
-                                                               
+code definitions  env.definitions()  end-code                  
+vocabulary forth                                               
+s" assembler" dup dup dup pad + 1+ ! pad + 3 + swap cmove>     
+pad count + vocab definitions vocabulary assembler             

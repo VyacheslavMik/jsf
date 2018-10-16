@@ -319,6 +319,10 @@ function vocab (name) {
     vocabularies.unshift(vocabulary);
 }
 
+function definitions () {
+    env.compilation_vocabulary = vocabularies[0];
+}
+
 // Dictionary entry
 // flags                    - 1 byte
 // link to previous word    - 1 cell
@@ -329,8 +333,8 @@ function vocab (name) {
 // data field               - cells with data
 
 function entry (name) {
-    let lastWord = vocabularies[0].word;
-    vocabularies[0].word = env.dp;
+    let lastWord = env.compilation_vocabulary.word;
+    env.compilation_vocabulary.word = env.dp;
 
     memWriteNextByte(0);           // flags
     memWriteNextCell(lastWord);    // link to previous word
@@ -610,6 +614,9 @@ let env = {memory:               memory,
 
 	   asm_entry:            asm_entry,
 	   entry:                entry,
+	   vocab:                vocab,
+	   definitions:          definitions,
+	   compilation_vocabulary: undefined,
 
 	   pause:                pause,
 	   resume:               resume,
@@ -710,6 +717,7 @@ function dump () {
 	printLast("          6 - blk");
 	printLast("          7 - blocks")
 	printLast("          8 - word");
+	printLast("          9 - vocabulary words");
     }
     if (flag == 1) {
 	let start = dataStackPopCell();
@@ -773,6 +781,29 @@ function dump () {
 	    output += cell + ' ';
 	}
 	while (cell != exit_code_addr && cell != undefined);
+
+	printValue(output);
+    }
+    if (flag == 9) {
+	let word = readWord();
+	if (word == '') {
+	    printValue('Specify vocabulary');
+	    return;
+	}
+	let idx = findVocab(word);
+	if (idx == undefined) {
+	    printValue('Vocabulary not found: ' + word);
+	    return;
+	}
+
+	let output = '';
+	let word_addr = vocabularies[idx].word;
+	while (word_addr > 0) {
+	    let word_name_addr = word_addr + 1 + 2;
+	    let word_name = readString(memory, word_name_addr);
+	    output += word_name + ' ';
+	    word_addr = readCell(memory, word_addr + 1);
+	}
 
 	printValue(output);
     }
@@ -968,8 +999,7 @@ memWriteNextByte(0);               // buffer block state
 block_number_pos = env.dp;
 memWriteNextByte(0);               // block number
 
-vocab("assembler");
-vocab("forth");
+vocab("assembler"); definitions();
 
 asm_entry("code", `
 let name = env.readWord();
@@ -986,6 +1016,8 @@ env.asm_entry(env.memory[1].name, env.memory[1].code);
 env.memory[0] = 0;
 env.memory[1] = 0;
 `);
+
+vocab("forth"); definitions();
 
 function backslash () {
     writeCell(memory, to_in_pos, (Math.floor(readCell(memory, to_in_pos) / 64) + 1) * 64);
