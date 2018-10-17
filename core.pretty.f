@@ -574,7 +574,7 @@ code definitions  env.definitions()  end-code
 vocabulary forth                                               
 s" assembler" dup dup dup pad + 1+ ! pad + 3 + swap cmove>     
 pad count + vocab definitions vocabulary assembler             
-\ words: abort" (abort") find forget                           
+\ words: abort" (abort") find forget 2variable 2constant       
                                                                
 forth definitions                                              
 : (abort")  if r> count type abort else r> count + >r then ;   
@@ -584,8 +584,8 @@ forth definitions
 code find  env.find();  end-code                               
 code forget  env.forget();  end-code                           
                                                                
-                                                               
-                                                               
+: 2variable  create 0 , 0 ,  ;                                 
+: 2constant  create , ,  does>  2@  ;                          
                                                                
                                                                
                                                                
