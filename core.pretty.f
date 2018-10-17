@@ -581,7 +581,7 @@ forth definitions
 : abort"  compile (abort") 34 word count  dup c,  here swap    
    dup allot cmove> ; immediate                                
                                                                
-                                                               
+code find  env.find();  end-code                               
                                                                
                                                                
                                                                

@@ -602,8 +602,30 @@ function memWriteNextString (value) {
     }
 }
 
-function memReadString(addr) {
+function memReadString (addr) {
     return readString(memory, addr);
+}
+
+function find () {
+    let saddr = dataStackPopCell();
+    let count = readByte(memory, saddr);
+    let str = '';
+    for (let i = 0; i < count; i++) {
+	str += String.fromCharCode(readByte(memory, saddr + i + 1));
+    }
+    let waddr = find_word(str);
+    if (waddr == undefined) {
+	dataStackPushCell(saddr);
+	dataStackPushCell(0);
+    } else {
+	let caddr = code_pointer_addr(waddr);
+	dataStackPushCell(caddr);
+	if (isImmediate(waddr)) {
+	    dataStackPushCell(1);
+	} else {
+	    dataStackPushCell(-1);
+	}
+    }
 }
 
 let env = {memory:               memory,
@@ -660,7 +682,8 @@ let env = {memory:               memory,
 	   flush:                flush,
 	   load:                 load,
 	   use:                  use,
-	   readWord:             readWord};
+	   readWord:             readWord,
+	   find:                 find};
 
 function execAsm (fn) {
     fn(env);
