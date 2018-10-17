@@ -628,6 +628,39 @@ function find () {
     }
 }
 
+function pruneVocabulary (addr, vocabulary) {
+    let word_addr = vocabulary.word;
+    while (word_addr > 0) {
+	if (word_addr < addr) {
+	    vocabulary.word = word_addr;
+	    return;
+	}
+	word_addr = readCell(memory, word_addr + 1);
+    }
+    vocabulary.word = 0;
+}
+
+function forget () {
+    let word = readWord();
+    let word_addr = env.compilation_vocabulary.word;
+    while (word_addr > 0) {
+	let name_addr = word_addr + 1 + 2;
+	let name = readString(memory, name_addr);
+	if (name == word) {
+	    break;
+	} else {
+	    word_addr = readCell(memory, word_addr + 1);
+	}
+    }
+    if (word_addr == 0) {
+	throw 'Word not found';
+    }
+    for (let i = 0; i < vocabularies.length; i++) {
+	pruneVocabulary(word_addr, vocabularies[i]);
+    }
+    env.dp = word_addr;
+}
+
 let env = {memory:               memory,
 	   rs:                   return_stack,
 	   ds:                   data_stack,
@@ -683,7 +716,8 @@ let env = {memory:               memory,
 	   load:                 load,
 	   use:                  use,
 	   readWord:             readWord,
-	   find:                 find};
+	   find:                 find,
+	   forget:               forget};
 
 function execAsm (fn) {
     fn(env);
