@@ -574,8 +574,8 @@ code definitions  env.definitions()  end-code
 vocabulary forth                                               
 s" assembler" dup dup dup pad + 1+ ! pad + 3 + swap cmove>     
 pad count + vocab definitions vocabulary assembler             
-\ words: abort" (abort") find forget 2variable 2constant       
-                                                               
+\ words: abort" (abort") find forget 2variable 2constant d0=   
+\ 2swap 2over 2rot                                             
 forth definitions                                              
 : (abort")  if r> count type abort else r> count + >r then ;   
 : abort"  compile (abort") 34 word count  dup c,  here swap    
@@ -586,7 +586,7 @@ code forget  env.forget();  end-code
                                                                
 : 2variable  create 0 , 0 ,  ;                                 
 : 2constant  create , ,  does>  2@  ;                          
-                                                               
-                                                               
-                                                               
-                                                               
+: d0=  0= swap 0= and  ;                                       
+: 2swap  3 roll 3 roll  ;                                      
+: 2over  3 pick 3 pick  ;                                      
+: 2rot  5 roll 5 roll  ;                                       
