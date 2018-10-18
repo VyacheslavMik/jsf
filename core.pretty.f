@@ -621,4 +621,4 @@ code d-
   env.dataStackPushDCell(ud2 - ud1);                           
 end-code                                                       
                                                                
-                                                               
+variable base  : decimal  10 base !  ;  decimal                

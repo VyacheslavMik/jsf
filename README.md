@@ -1,5 +1,5 @@
 ### Not implemented:
-"# #> #s <# base convert decimal hold sign d- d.r"
+"# #> #s <# convert hold sign ;code d.r"
 
 ### Other
 Clojure code for finding not implementing words.
@@ -10,8 +10,10 @@ Clojure code for finding not implementing words.
 		      (clojure.string/replace "Nucleus layer" "")
 		      (clojure.string/replace "none" "")
 		      (clojure.string/replace "LOAD" "")
-		      (clojure.string/replace "CODE" "")
 		      (clojure.string/replace "END-CODE" "")
+		      (clojure.string/replace #" CODE " "")
+		      (clojure.string/replace "CONTEXT" "")
+		      (clojure.string/replace "CURRENT" "")
 		      (clojure.string/replace "Device layer" "")
 		      (clojure.string/replace "Interpreter layer" "")
 		      (clojure.string/replace "Compiler layer" "")
