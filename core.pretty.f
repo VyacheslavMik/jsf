@@ -606,7 +606,7 @@ code d2/
   env.dataStackPushDCell(d / 2);                               
 end-code                                                       
                                                                
-\ words: du<                                                   
+\ words: du< d-                                                
                                                                
 code du<                                                       
   let ud2 = env.dataStackPopDCell();                           
@@ -615,10 +615,10 @@ code du<
   else { env.dataStackPushCell(0); }                           
 end-code                                                       
                                                                
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
+code d-                                                        
+  let ud2 = env.dataStackPopDCell();                           
+  let ud1 = env.dataStackPopDCell();                           
+  env.dataStackPushDCell(ud2 - ud1);                           
+end-code                                                       
                                                                
                                                                
