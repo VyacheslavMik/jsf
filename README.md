@@ -1,5 +1,5 @@
 ### Not implemented:
-"# #> #s <# base convert decimal hold sign d- d0= d2/ dabs dmax dmin du< d.r"
+"# #> #s <# base convert decimal hold sign d- d.r"
 
 ### Other
 Clojure code for finding not implementing words.

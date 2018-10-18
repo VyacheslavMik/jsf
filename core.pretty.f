@@ -11,7 +11,7 @@ code use   let file = env.readWord(); env.use(file);   end-code
 11 load 12 load 13 load 14 load 15 load 16 load 17 load 18 load
 19 load 20 load 21 load 22 load 23 load 24 load 25 load 26 load
 27 load 28 load 29 load 30 load 31 load 32 load 33 load 34 load
-35 load 36 load 37 load                                        
+35 load 36 load 37 load 38 load 39 load                        
                                                                
                                                                
 \ words: exit >=                                               
@@ -590,3 +590,35 @@ code forget  env.forget();  end-code
 : 2swap  3 roll 3 roll  ;                                      
 : 2over  3 pick 3 pick  ;                                      
 : 2rot  5 roll 5 roll  ;                                       
+\ words: dabs dmax dmin d2/                                    
+                                                               
+code dabs                                                      
+  let d = env.dataStackPopDCellNum();                          
+  if (d < 0) { d = -d; }                                       
+  env.dataStackPushDCell(d);                                   
+end-code                                                       
+                                                               
+: dmax  2over 2over d<  if  2swap  then  2drop  ;              
+: dmin  2over 2over d< not if  2swap  then  2drop  ;           
+                                                               
+code d2/                                                       
+  let d = env.dataStackPopDCellNum();                          
+  env.dataStackPushDCell(d / 2);                               
+end-code                                                       
+                                                               
+\ words: du<                                                   
+                                                               
+code du<                                                       
+  let ud2 = env.dataStackPopDCell();                           
+  let ud1 = env.dataStackPopDCell();                           
+  if (ud1 < ud2) { env.dataStackPushCell(-1); }                
+  else { env.dataStackPushCell(0); }                           
+end-code                                                       
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
