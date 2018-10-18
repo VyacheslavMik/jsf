@@ -11,7 +11,7 @@ code use   let file = env.readWord(); env.use(file);   end-code
 11 load 12 load 13 load 14 load 15 load 16 load 17 load 18 load
 19 load 20 load 21 load 22 load 23 load 24 load 25 load 26 load
 27 load 28 load 29 load 30 load 31 load 32 load 33 load 34 load
-35 load 36 load 37 load 38 load 39 load                        
+35 load 36 load 37 load 38 load 39 load 40 load                
                                                                
                                                                
 \ words: exit >=                                               
@@ -606,7 +606,7 @@ code d2/
   env.dataStackPushDCell(d / 2);                               
 end-code                                                       
                                                                
-\ words: du< d-                                                
+\ words: du< d- base decimal                                   
                                                                
 code du<                                                       
   let ud2 = env.dataStackPopDCell();                           
@@ -622,3 +622,19 @@ code d-
 end-code                                                       
                                                                
 variable base  : decimal  10 base !  ;  decimal                
+\ words:                                                       
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               

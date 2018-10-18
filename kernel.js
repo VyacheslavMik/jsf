@@ -668,10 +668,12 @@ let env = {memory:               memory,
 	   dp:                   0,
 
 	   asm_entry:            asm_entry,
+	   asm_vocab:            asm_vocab,
 	   entry:                entry,
 	   vocab:                vocab,
 	   definitions:          definitions,
 	   compilation_vocabulary: undefined,
+	   semicolonCode:        semicolonCode,
 
 	   pause:                pause,
 	   resume:               resume,
@@ -1065,11 +1067,40 @@ if (name.trim() == '') {
 }
 env.printValue('a[' + name + ']');
 env.memory[0] = 1;
-env.memory[1] = { name: name, code: '' };
+env.memory[1] = {
+                  name: name,
+                  code: '',
+                  make: function(v) {
+                            env.asm_entry(v.name, v.code);
+                        }
+                };
 `);
 
+function semicolonCode (v) {
+    asmVocabPush(makeAsm(v.code))
+}
+
+asm_entry(";code", `
+let w = env.code_pointer_addr(env.find_word('does>'));
+env.memWriteNextCell(2);
+env.memWriteNextCell(w);
+env.memWriteNextCell(1);
+env.memWriteNextCell(env.asm_vocab.p);
+w = env.code_pointer_addr(env.find_word('exit'));
+env.memWriteNextCell(2);
+env.memWriteNextCell(w);
+env.memory[0] = 1;
+env.memory[2] = 0;
+env.memory[1] = {
+                  code: '',
+                  make: env.semicolonCode
+                };
+`);
+
+memory[env.compilation_vocabulary.word] = 1;
+
 asm_entry('end-code', `
-env.asm_entry(env.memory[1].name, env.memory[1].code);
+env.memory[1].make(env.memory[1]);
 env.memory[0] = 0;
 env.memory[1] = 0;
 `);
