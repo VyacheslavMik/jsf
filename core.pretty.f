@@ -11,7 +11,7 @@ code use   let file = env.readWord(); env.use(file);   end-code
 11 load 12 load 13 load 14 load 15 load 16 load 17 load 18 load
 19 load 20 load 21 load 22 load 23 load 24 load 25 load 26 load
 27 load 28 load 29 load 30 load 31 load 32 load 33 load 34 load
-35 load 36 load 37 load 38 load 39 load 40 load                
+35 load 36 load 37 load 38 load 39 load 40 load 41 load        
                                                                
                                                                
 \ words: exit >=                                               
@@ -622,13 +622,29 @@ code d-
 end-code                                                       
                                                                
 variable base  : decimal  10 base !  ;  decimal                
-\ words:                                                       
+\ words: char [char] d* digits" input-char                     
                                                                
+: input-char   input-stream >in @ +  dup input-limit >=        
+   if drop 0 else -1 then  ;                                   
+: char  >in @ 1 + input-limit >= if 0 else 1 >in +! input-char 
+   if c@ 1 >in +! else 0 then then ;                           
+: [char]  char [compile] literal  ; immediate                  
+: digits"  here 128 0 do 128 c, loop [char] " word count 0 do  
+   dup i + c@  2 pick + i swap c! loop drop ;                  
+digits" 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrs
+tuvwxyz:;<=>?@[]^"                                             
+code d*                                                        
+  let wd2 = env.dataStackPopDCellNum();                        
+  let wd1 = env.dataStackPopDCellNum();                        
+  env.dataStackPushDCell(wd1 * wd2);                           
+end-code                                                       
+\ words: digit? accumulate convert                             
                                                                
-                                                               
-                                                               
-                                                               
-                                                               
+: digit?  literal + c@ dup 128 = if drop 0 0 else dup base @   
+   < if -1 else drop 0 0 then then ;                           
+: accumulate  swap >r >r base @ 0 d* r> 0 d+ r>  ;             
+: convert  1+ begin  dup c@ digit? if accumulate 1+ -1 else    
+   drop 0 then until ;                                         
                                                                
                                                                
                                                                

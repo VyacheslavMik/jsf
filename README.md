@@ -1,5 +1,5 @@
 ### Not implemented:
-"# #> #s <# convert hold sign ;code d.r"
+"# #> #s <# convert hold sign d.r"
 
 ### Other
 Clojure code for finding not implementing words.
