@@ -11,7 +11,7 @@ code use   let file = env.readWord(); env.use(file);   end-code
 11 load 12 load 13 load 14 load 15 load 16 load 17 load 18 load
 19 load 20 load 21 load 22 load 23 load 24 load 25 load 26 load
 27 load 28 load 29 load 30 load 31 load 32 load 33 load 34 load
-35 load 36 load 37 load 38 load 39 load 40 load 41 load        
+35 load 36 load 37 load 38 load 39 load 40 load 41 load 42 load
                                                                
                                                                
 \ words: exit >=                                               
@@ -622,7 +622,7 @@ code d-
 end-code                                                       
                                                                
 variable base  : decimal  10 base !  ;  decimal                
-\ words: char [char] d* digits" input-char                     
+\ words: char [char] d* char-digit" input-char                 
                                                                
 : input-char   input-stream >in @ +  dup input-limit >=        
    if drop 0 else -1 then  ;                                   
@@ -638,7 +638,7 @@ code d*
   let wd1 = env.dataStackPopDCellNum();                        
   env.dataStackPushDCell(wd1 * wd2);                           
 end-code                                                       
-\ words: digit? accumulate convert                             
+\ words: digit? accumulate convert d/mod                       
                                                                
 : digit?  literal + c@ dup 128 = if drop 0 0 else dup base @   
    < if -1 else drop 0 0 then then ;                           
@@ -646,11 +646,27 @@ end-code
 : convert  1+ begin  dup c@ digit? if accumulate 1+ -1 else    
    drop 0 then until ;                                         
                                                                
+\ ( d1 n1 -- n2 d2 )                                           
+code d/mod                                                     
+  let n1 = env.dataStackPopNum();                              
+  let d1 = env.dataStackPopDCellNum();                         
+  let d2 = Math.floor(d1 / n1);                                
+  env.dataStackPushCell(d1 - n1 * d2);                         
+  env.dataStackPushDCell(d2);                                  
+end-code                                                       
+\ words: digit-char" digit? <#addr#> <# #> # hold #s sign tuck 
                                                                
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
+: digit-char"  here [char] " word count 0 do dup i + c@ c, loop
+   drop ;                                                      
+digit-char" 0123456789ABCDEF"                                  
+: digit?  literal  swap dup base @ 1- > if 2drop 0 0 else + c@ 
+   -1 then ;                                                   
+variable <#addr#>                                              
+: <#  pad 24 +  <#addr#> !  ;                                  
+: #>  2drop  <#addr#> @ 1+  pad 24 + <#addr#> @ -  ;           
+: #  base @ d/mod rot digit? if <#addr#> @ c! -1 <#addr#> +!   
+   else abort" Something go wrong" then  ;                     
+: hold  <#addr#> @ c! -1 <#addr#> +!  ;                        
+: #s  begin # 2dup d0= not until  ;                            
+: sign  0 < if [char] - hold then  ;                           
+: tuck  dup rot rot  ;                                         
