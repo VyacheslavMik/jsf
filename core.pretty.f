@@ -629,10 +629,10 @@ variable base  : decimal  10 base !  ;  decimal
 : char  >in @ 1 + input-limit >= if 0 else 1 >in +! input-char 
    if c@ 1 >in +! else 0 then then ;                           
 : [char]  char [compile] literal  ; immediate                  
-: digits"  here 128 0 do 128 c, loop [char] " word count 0 do  
-   dup i + c@  2 pick + i swap c! loop drop ;                  
-digits" 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrs
-tuvwxyz:;<=>?@[]^"                                             
+: char-digit"  here 128 0 do 128 c, loop [char] " word count 0 
+   do dup i + c@  2 pick + i swap c! loop drop ;               
+char-digit" 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmno
+qrstuvwxyz:;<=>?@[]^"                                          
 code d*                                                        
   let wd2 = env.dataStackPopDCellNum();                        
   let wd1 = env.dataStackPopDCellNum();                        
