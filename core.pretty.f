@@ -12,7 +12,7 @@ code use   let file = env.readWord(); env.use(file);   end-code
 19 load 20 load 21 load 22 load 23 load 24 load 25 load 26 load
 27 load 28 load 29 load 30 load 31 load 32 load 33 load 34 load
 35 load 36 load 37 load 38 load 39 load 40 load 41 load 42 load
-                                                               
+43 load                                                        
                                                                
 \ words: exit >=                                               
                                                                
@@ -62,18 +62,18 @@ end-code
                                                                
                                                                
                                                                
-\ words: . +                                                   
-                                                               
-code .                                                         
-  let val = env.dataStackPopNum();                             
-  env.printValue(val);                                         
-end-code                                                       
+\ words: +                                                     
                                                                
 code +                                                         
   let a = env.dataStackPopCell();                              
   let b = env.dataStackPopCell();                              
   env.dataStackPushCell(a + b);                                
 end-code                                                       
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
                                                                
                                                                
                                                                
@@ -94,7 +94,7 @@ end-code
                                                                
                                                                
                                                                
-\ words: / u.                                                  
+\ words: /                                                     
                                                                
 code /                                                         
   let a = env.dataStackPopNum();                               
@@ -102,10 +102,10 @@ code /
   env.dataStackPushCell(Math.floor(b / a));                    
 end-code                                                       
                                                                
-code u.                                                        
-  let v = env.dataStackPopCell();                              
-  env.printValue(v);                                           
-end-code                                                       
+                                                               
+                                                               
+                                                               
+                                                               
                                                                
                                                                
                                                                
@@ -414,11 +414,7 @@ code um*
 end-code                                                       
                                                                
                                                                
-\ word: d. um/mod                                              
-                                                               
-code d.  env.printValue(env.dataStackPopDCellNum());  end-code 
-                                                               
-code ud.  env.printValue(env.dataStackPopDCell());  end-code   
+\ word: um/mod                                                 
                                                                
 code um/mod                                                    
   let u1 = env.dataStackPopCell();                             
@@ -427,6 +423,10 @@ code um/mod
   env.dataStackPushCell(ud - u1 * u3);                         
   env.dataStackPushCell(u3);                                   
 end-code                                                       
+                                                               
+                                                               
+                                                               
+                                                               
                                                                
                                                                
                                                                
@@ -462,7 +462,7 @@ end-code
 : 2drop  drop drop  ;                                          
 : d=   rot = >r = r> and  ;                                    
 : 2dup   over over  ;                                          
-\ words: leave expect list #tib                                
+\ words: leave expect #tib                                     
                                                                
 : inc-var   1 over +! @ ;                                      
 variable (+loop)-xt  ' (+loop) (+loop)-xt !                    
@@ -474,10 +474,10 @@ variable span
 : expect   0 span !  dup 0= if drop drop else                  
    0 do  key  dup 13 = if  space leave  else                   
    dup emit  over i + c!  1 span +!  then  loop  drop  then ;  
-: list   block  16 0 do cr i .  dup i 64 * +  64 type  loop ;  
 code #tib                                                      
    env.dataStackPushCell(env.number_tib_pos);                  
 end-code                                                       
+                                                               
 \ words: >in >body rs-clear ds-clear quit abort blk pad tib    
 \       forth-83                                               
 code >in   env.dataStackPushCell(env.to_in_pos); end-code      
@@ -649,7 +649,7 @@ end-code
 \ ( d1 n1 -- n2 d2 )                                           
 code d/mod                                                     
   let n1 = env.dataStackPopNum();                              
-  let d1 = env.dataStackPopDCellNum();                         
+  let d1 = env.dataStackPopDCell();                            
   let d2 = Math.floor(d1 / n1);                                
   env.dataStackPushCell(d1 - n1 * d2);                         
   env.dataStackPushDCell(d2);                                  
@@ -670,3 +670,19 @@ variable <#addr#>
 : #s  begin # 2dup d0= not until  ;                            
 : sign  0 < if [char] - hold then  ;                           
 : tuck  dup rot rot  ;                                         
+\ words: d. ud. u. . list d.r                                  
+                                                               
+: d.  tuck dabs <# #s rot sign #> type space  ;                
+: ud. <# #s #> type space  ;                                   
+: u.  0 ud.  ;                                                 
+: .  dup 0> if 0 else -1 then d.  ;                            
+: list   block  16 0 do cr i .  dup i 64 * +  64 type  loop ;  
+: d.r  >r tuck dabs <# #s rot sign #>  dup r> swap - dup 0 < if
+   abort" Not enough space" else spaces type space then  ;     
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
