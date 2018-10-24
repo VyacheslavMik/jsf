@@ -1,0 +1,22 @@
+-Code and end-code-
+-code test env.printValue(1); end-code test-
+-a[test] 1 -
+
+-Backslash-
+-\ 1 2 + .-
+--
+
+-;code-
+-
+: test create , ;code
+  let addr = env.dataStackPopCell();
+  let v = env.readCell(env.memory, addr);
+  env.printValue(v);
+end-code
+7 test xxx xxx
+-
+-c[test] n[xxx] 7 -
+
+--
+-1 2 + .-
+-3 -

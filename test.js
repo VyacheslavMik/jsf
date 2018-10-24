@@ -3,11 +3,11 @@ process.stdin.on('data', (chunk) => { if (c == 3) process.exit(); });
 
 let tests = [];
 
-function addTest(str, expected) {
-    tests[tests.length] = { str: str, expected: expected };
+function addTest(desc, str, expected) {
+    tests[tests.length] = { desc: desc, str: str, expected: expected };
 }
 
-function runTest (str, expected) {
+function runTest (desc, str, expected) {
     return new Promise(resolve => {
 	let kernel = require('./kernel.js');
 	kernel.setExitFn(() => { process.exit(); });
@@ -15,7 +15,7 @@ function runTest (str, expected) {
 	    if (kernel.isOnPause) {
 		kernel.setWriteFn((actual) => {
 		    if (actual == expected + ' ok\n') {
-			console.log('Passed "' + str + '"');
+			console.log('Passed "' + desc + '"');
 		    } else {
 			console.log('Failed "' + str + '". Actual: "' + actual.trim('\n') + '"');
 		    }
@@ -33,12 +33,25 @@ function runTest (str, expected) {
 async function runTests () {
     for (let i = 0; i < tests.length; i++) {
 	let test = tests[i];
-	await runTest(test.str, test.expected);
+	await runTest(test.desc, test.str, test.expected);
     }
     process.exit();
 }
 
-addTest('code test env.printValue(1); end-code test', 'a[test] 1 ');
-addTest('1 2 + .', '3 ');
+var fs = require('fs');
+fs.readFile('tests', function (err, data) {
+    if (err) {
+	throw err; 
+    }
 
-runTests();
+    let content = data.toString();
+    var regex = /-([\s\S]*?)-\n-([\s\S]*?)-\n-([\s\S]*?)-/g;
+    var match = regex.exec(content);
+
+    while (match != null) {
+    	addTest(match[1], match[2], match[3]);
+    	match = regex.exec(content);
+    }
+
+    runTests();
+})
