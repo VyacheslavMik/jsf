@@ -8,31 +8,37 @@ function addTest(str, expected) {
 }
 
 function runTest (str, expected) {
-    let kernel = require('./kernel.js');
-    kernel.setExitFn(() => { process.exit(); });
-    let fn = function () {
-	if (kernel.isOnPause) {
-	    kernel.setWriteFn((actual) => {
-		if (actual == expected + ' ok\n') {
-		    console.log('"' + str + '" passed');
-		} else {
-		    console.log('"' + str + '" failed. Actual: "' + actual.trim('\n') + '"');
-		}
-	    });
-	    kernel.execute(str);
-	    process.exit();
-	} else {
-	    setTimeout(fn, 1000);
+    return new Promise(resolve => {
+	let kernel = require('./kernel.js');
+	kernel.setExitFn(() => { process.exit(); });
+	let fn = function () {
+	    if (kernel.isOnPause) {
+		kernel.setWriteFn((actual) => {
+		    if (actual == expected + ' ok\n') {
+			console.log('Passed "' + str + '"');
+		    } else {
+			console.log('Failed "' + str + '". Actual: "' + actual.trim('\n') + '"');
+		    }
+		    resolve();
+		});
+		kernel.execute(str);
+	    } else {
+		setTimeout(fn, 1000);
+	    }
 	}
-    }
-    setTimeout(fn, 10);
-}
-
-function runTests () {
-    tests.map(function (test) {
-	runTest(test.str, test.expected);
+	setTimeout(fn, 10);
     });
 }
 
+async function runTests () {
+    for (let i = 0; i < tests.length; i++) {
+	let test = tests[i];
+	await runTest(test.str, test.expected);
+    }
+    process.exit();
+}
+
+addTest('code test env.printValue(1); end-code test', 'a[test] 1 ');
 addTest('1 2 + .', '3 ');
+
 runTests();
