@@ -1,5 +1,5 @@
 ### Not implemented:
-"# #> #s <# hold sign d.r"
+"current context"
 
 ### Other
 Clojure code for finding not implementing words.
@@ -11,6 +11,7 @@ Clojure code for finding not implementing words.
 		      (clojure.string/replace "none" "")
 		      (clojure.string/replace "LOAD" "")
 		      (clojure.string/replace "END-CODE" "")
+		      (clojure.string/replace ";CODE" "")
 		      (clojure.string/replace #" CODE " "")
 		      (clojure.string/replace "CONTEXT" "")
 		      (clojure.string/replace "CURRENT" "")

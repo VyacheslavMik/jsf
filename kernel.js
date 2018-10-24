@@ -1,3 +1,5 @@
+'use strict';
+
 // need to refactor
 let memory = [];
 let vocabularies = [];
@@ -5,22 +7,24 @@ let vocabularies = [];
 let blks = [];
 
 let blocks = [];
-let file_name = '';
+let fileName = '';
 
-let to_in_pos = 0;
-let tib_pos = 0;
-let number_tib_pos = 0;
-let buffer_pos = 0;
-let buffer_state_pos = 0;
-let buffer_block_pos = 0;
-let block_number_pos = 0;
+let toInPos = 0;
+let tibPos = 0;
+let numberTibPos = 0;
+let bufferPos = 0;
+let bufferStatePos = 0;
+let bufferBlockPos = 0;
+let blockNumberPos = 0;
 
-let output_buffer = '';
-let line_length = 0;
+let outputBuffer = '';
 let isPrintingOutput = false;
 
 let isOnPause = false;
 let isWaitingKey = false;
+
+let writeFn;
+let exitFn;
 
 function readCell (arr, addr) {
     return arr[addr] * 256 + arr[addr + 1];
@@ -35,19 +39,9 @@ function readCellNum (arr, addr) {
     return x;
 }
 
-function readNextCell (input) {
-    let value = readCell(input.arr, input.p);
-    input.p += 2;
-    return value;
-}
-
 function writeCell (arr, addr, value) {
     arr[addr + 1] = value & 0xFF;
     arr[addr] = (value >> 8) & 0xFF;
-}
-
-function writeNextCell (arr, value) {
-    writeCell(arr, arr.length, value);
 }
 
 function stackPushCell (stack, value) {
@@ -181,39 +175,8 @@ function readByte (arr, addr) {
     return arr[addr];
 }
 
-function readNextByte (input) {
-    let value = readByte(input.arr, input.p);
-    input.p++;
-    return value;
-}
-
 function writeByte (arr, addr, value) {
     arr[addr] = value & 0xFF;
-}
-
-function writeNextByte (arr, value) {
-    writeByte(arr, arr.length, value);
-}
-
-function stackPushByte (stack, value) {
-    if (stack.p == stack.limit)
-	throw stack.desc + " is overflow";
-    writeByte(stack.arr, stack.p, value);
-    stack.p++;
-}
-
-function stackPopByte (stack) {
-    if (stack.p == 0)
-	throw stack.desc + " is underflow";
-    let value = readByte(stack.arr, stack.p - 1);
-    stack.p--;
-    return value;
-}
-
-function stackPeekByte (stack) {
-    if (stack.p === 0)
-	throw stack.desc + " is underflow";
-    readByte(stack.arr, stack.p);
 }
 
 function readString (arr, addr) {
@@ -238,30 +201,23 @@ function writeString (arr, addr, value) {
     }
 }
 
-function writeNextString (arr, value) {
-    writeString(arr, arr.length, value);
-}
-
-let asm_vocab    = { arr: [], p: 0 };
+let functions    = { arr: [], p: 0 };
 let data_stack   = { arr: [], p: 0, desc: "Data stack", limit: 1024 };
 let return_stack = { arr: [], p: 0, desc: "Return stack", limit: 1024 };
 
 function asmVocabPush (value) {
-    if (asm_vocab.p == 1024)
+    if (functions.p == 1024)
 	throw "Assembler vocabulary is overflow";
-    asm_vocab.arr[asm_vocab.p] = value;
-    asm_vocab.p++;
+    functions.arr[functions.p] = value;
+    functions.p++;
 }
 
 function asmVocabPeek (addr) {
-    if (addr > asm_vocab.p && addr < 0)
+    if (addr > functions.p && addr < 0)
 	throw "Assembler peek is out of range";
-    return asm_vocab.arr[addr];
+    return functions.arr[addr];
 }
 
-function dataStackPushByte     (value) { stackPushByte(data_stack, value);     }
-function dataStackPopByte      ()      { return stackPopByte(data_stack);      }
-function dataStackPeekByte     ()      { return stackPeekByte(data_stack);     }
 function dataStackPushCell     (value) { stackPushCell(data_stack, value);     }
 function dataStackPushDCell    (value) { stackPushDCell(data_stack, value);    }
 function dataStackPopCell      ()      { return stackPopCell(data_stack);      }
@@ -270,9 +226,6 @@ function dataStackPopDCellNum  ()      { return stackPopDCellNum(data_stack);  }
 function dataStackPopNum       ()      { return stackPopNum(data_stack);       }
 function dataStackPeekCell     ()      { return stackPeekCell(data_stack);     }
 
-function returnStackPushByte   (value) { stackPushByte(return_stack, value);   }
-function returnStackPopByte    ()      { return stackPopByte(return_stack);    }
-function returnStackPeekByte   ()      { return stackPeekByte(return_stack);   }
 function returnStackPushCell   (value) { stackPushCell(return_stack, value);   }
 function returnStackPopCell    ()      { return stackPopCell(return_stack);    }
 function returnStackPeekCell   ()      { return stackPeekCell(return_stack);   }
@@ -346,27 +299,27 @@ function isControlChar(c) {
 }
 
 function popBlock() {
-    blk = blks.pop();
+    let blk = blks.pop();
     if (blk.num != 0) {
 	dataStackPushCell(blk.num);
 	block();
 	dataStackPopCell();
     }
-    writeByte(memory, block_number_pos, blk.num);
-    writeCell(memory, to_in_pos, blk.to_in);
+    writeByte(memory, blockNumberPos, blk.num);
+    writeCell(memory, toInPos, blk.to_in);
 }
 
 function readWord () {
     while (true) {
-	let blk = readByte(memory, block_number_pos);
+	let blk = readByte(memory, blockNumberPos);
 	let limit = 0;
 	if (blk > 0) {
 	    limit = 1025;
 	} else {
-	    limit = readCell(memory, number_tib_pos);
+	    limit = readCell(memory, numberTibPos);
 	}
 
-	let to_in = readCell(memory, to_in_pos);
+	let to_in = readCell(memory, toInPos);
 
 	// input exhausted
 	if (blks.length == 0 && to_in >= limit) {
@@ -375,11 +328,11 @@ function readWord () {
 
 	let pos = 0;
 	if (blk > 0) {
-	    limit = buffer_pos + limit;
-	    pos = buffer_pos + to_in;
+	    limit = bufferPos + limit;
+	    pos = bufferPos + to_in;
 	} else {
-	    limit = tib_pos + limit;
-	    pos = tib_pos + to_in;
+	    limit = tibPos + limit;
+	    pos = tibPos + to_in;
 	}
 
 	for (; pos < limit; pos++, to_in++) {
@@ -391,14 +344,14 @@ function readWord () {
 	let word = '';
 	for (; pos < limit; pos++, to_in++) {
 	    if (isControlChar(memory[pos]) || memory[pos] == 32) {
-		writeCell(memory, to_in_pos, to_in);
+		writeCell(memory, toInPos, to_in);
 		return word;
 	    } else {
 		word += String.fromCharCode(memory[pos]);
 	    }
 	}
 
-	writeCell(memory, to_in_pos, to_in);
+	writeCell(memory, toInPos, to_in);
 
 	if (word != '') {
 	    return word;
@@ -411,33 +364,33 @@ function readWord () {
 }
 
 function isBufferUpdated () {
-    return memory[buffer_state_pos] == 1;
+    return memory[bufferStatePos] == 1;
 }
 
 function save_buffers () {
     if (isBufferUpdated()) {
-	let blk = readByte(memory, buffer_block_pos) - 1;
+	let blk = readByte(memory, bufferBlockPos) - 1;
 	let arr = [];
 	for (let i = 0; i < 1024; i++) {
 	    let c = 32;
-	    if (memory[buffer_pos + i] != undefined) {
-		c = memory[buffer_pos + i];
+	    if (memory[bufferPos + i] != undefined) {
+		c = memory[bufferPos + i];
 	    }
 	    arr[i] = c;
 	}
 	blocks[blk] = arr;
-	memory[buffer_state_pos] = 0;
+	memory[bufferStatePos] = 0;
 	save_file();
     }
 }
 
 function flush () {
     save_buffers();
-    writeByte(memory, buffer_block_pos, 0);
+    writeByte(memory, bufferBlockPos, 0);
 }
 
 function buffer_update () {
-    memory[buffer_state_pos] = 1;
+    memory[bufferStatePos] = 1;
 }
 
 function block () {
@@ -445,7 +398,7 @@ function block () {
 
     if (u == 0) throw '0 block is denied';
     
-    let blk = readByte(memory, buffer_block_pos);
+    let blk = readByte(memory, bufferBlockPos);
 
     if (u != blk) {
 	save_buffers();
@@ -461,25 +414,25 @@ function block () {
 	    } else {
 		c = arr[i];
 	    }
-	    memory[buffer_pos + i] = c;
+	    memory[bufferPos + i] = c;
 	}
-	writeByte(memory, buffer_block_pos, u);
+	writeByte(memory, bufferBlockPos, u);
     }
-    dataStackPushCell(buffer_pos);
+    dataStackPushCell(bufferPos);
 }
 
 function load () {
     let u = dataStackPeekCell();
-    let blk = readByte(memory, block_number_pos);
-    let to_in = readCell(memory, to_in_pos);
+    let blk = readByte(memory, blockNumberPos);
+    let to_in = readCell(memory, toInPos);
 
     block();
     dataStackPopCell();
 
     blks.push({ num: blk, to_in: to_in });
 
-    writeByte(memory, block_number_pos, u);
-    writeCell(memory, to_in_pos, 0);
+    writeByte(memory, blockNumberPos, u);
+    writeCell(memory, toInPos, 0);
 }
 
 function find_word (name) {
@@ -499,20 +452,26 @@ function find_word (name) {
 }
 
 function printValue (v) {
-    output_buffer += v + ' ';
+    outputBuffer += v + ' ';
 }
 
 function printChar (c) {
-    output_buffer += String.fromCharCode(c);
+    outputBuffer += String.fromCharCode(c);
 }
 
 function printLast (v) {
-    output_buffer += v + '\n';
+    outputBuffer += v + '\n';
+}
+
+function writeOutput (outputBuffer) {
+    if (writeFn != undefined) {
+	writeFn(outputBuffer);
+    }
 }
 
 function printOutput () {
-    process.stdout.write(output_buffer);
-    output_buffer = '';
+    writeOutput(outputBuffer);
+    outputBuffer = '';
 }
 
 function pause() {
@@ -535,43 +494,37 @@ function waitKey() {
 
 const removeSeq = Buffer.from([8, 32, 8]);
 
+function exit() {
+    if (exitFn != undefined) {
+	exitFn();
+    }
+}
+
 function processChar(c) {
-    if (c == 3)  process.exit();
+    if (c == 3)  exit();
     if (isWaitingKey) {
 	dataStackPushCell(c);
 	resume();
     } else {
 	if (c == 13) {
-	    output_buffer = ' ' + output_buffer;
+	    outputBuffer = ' ' + outputBuffer;
 
 	    if (!isWaitingKey) {
 		resume();
 	    }
 	} else if (c == 127) {
-	    let ntib = readCell(memory, number_tib_pos);
+	    let ntib = readCell(memory, numberTibPos);
 	    if (ntib > 0) {
-		writeCell(memory, number_tib_pos, ntib - 1);
+		writeCell(memory, numberTibPos, ntib - 1);
 	    }
-	    process.stdout.write(removeSeq);
+	    writeOutput(removeSeq)
 	} else {
-	    writeByte(memory, tib_pos + readCell(memory, number_tib_pos), c);
-	    writeCell(memory, number_tib_pos, readCell(memory, number_tib_pos) + 1);
-	    process.stdout.write(String.fromCharCode(c));
+	    writeByte(memory, tibPos + readCell(memory, numberTibPos), c);
+	    writeCell(memory, numberTibPos, readCell(memory, numberTibPos) + 1);
+	    writeOutput(String.fromCharCode(c));
 	}
     }
 }
-
-process.stdin.setRawMode(true);
-process.stdin.on('data', (chunk) => {
-    if (chunk.length == 1) {
-	processChar(chunk[0]);
-    } else {
-	for (let i = 0; i < chunk.length; i++) {
-	    processChar(chunk[i]);
-	}
-    }
-});
-
 
 function printStack (stack) {
     let count = stack.p / 2;
@@ -668,7 +621,7 @@ let env = {memory:               memory,
 	   dp:                   0,
 
 	   asm_entry:            asm_entry,
-	   asm_vocab:            asm_vocab,
+	   functions:            functions,
 	   entry:                entry,
 	   vocab:                vocab,
 	   definitions:          definitions,
@@ -721,10 +674,6 @@ let env = {memory:               memory,
 	   find:                 find,
 	   forget:               forget};
 
-function execAsm (fn) {
-    fn(env);
-}
-
 function makeAsm (str) {
     return Function('env', str);
 }
@@ -733,7 +682,7 @@ function asm_entry (name, code) {
     vocab("assembler");
     entry(name);
     memWriteNextCell(1);
-    memWriteNextCell(asm_vocab.p);
+    memWriteNextCell(functions.p);
     asmVocabPush(makeAsm(code));
 }
 
@@ -745,7 +694,8 @@ function address_interpreter () {
 	let code = readCell(memory, code_addr);
 	if (code == 1) {
 	    let asm_pointer = readCell(memory, code_addr + 2);
-	    execAsm(asmVocabPeek(asm_pointer));
+	    let fn = asmVocabPeek(asm_pointer);
+	    fn(env);
 	} else if (code == 2) {
 	    let code_pointer = readCell(memory, code_addr + 2);
 	    returnStackPushCell(code_addr + 4);
@@ -769,7 +719,7 @@ function dump () {
     let flag = dataStackPopCell();
     if (flag > 9 || flag < 1) {
 	printLast("end start 1 - memory.slice(start, end)");
-	printLast("          2 - asm_vocab");
+	printLast("          2 - functions");
 	printLast("          3 - data_stack");
 	printLast("          4 - return_stack");
 	printLast("          5 - vocabularies");
@@ -784,7 +734,7 @@ function dump () {
 	printValue(memory.slice(start, end));
     }
     if (flag == 2) {
-	printValue(asm_vocab);
+	printValue(functions);
     }
     if (flag == 3) {
 	printValue('p: ' + data_stack.p + ' arr: ' + data_stack.arr);
@@ -874,16 +824,16 @@ function use (name) {
     pause();
 
     blocks = [];
-    writeByte(memory, buffer_block_pos, 0);
-    writeByte(memory, block_number_pos, 0);
+    writeByte(memory, bufferBlockPos, 0);
+    writeByte(memory, blockNumberPos, 0);
 
-    file_name = __dirname + '/' + name;
-    if (!fs.existsSync(file_name)) {
+    fileName = __dirname + '/' + name;
+    if (!fs.existsSync(fileName)) {
 	resume();
 	return;
     }
 
-    fs.readFile( file_name, function (err, data) {
+    fs.readFile( fileName, function (err, data) {
 	if (err) {
 	    throw err; 
 	}
@@ -915,7 +865,7 @@ function save_file () {
 	}
     }
     pause();
-    fs.writeFile(file_name, output, function(err) {
+    fs.writeFile(fileName, output, function(err) {
 	if(err) {
 	    console.log(err);
 	    process.exit();
@@ -951,7 +901,7 @@ function text_interpreter () {
 		message = 'ok';
 	    } else if (memory[0] == 0) {
 		if (word == 'bye') {
-		    process.exit();
+		    exit();
 		    break;
 		} else if (word == 'dump') {
 		    dump();
@@ -1012,15 +962,15 @@ function text_interpreter () {
 	if (!isOnPause) {
 	    printLast(' ' + message);
 	    pause();
-	    writeCell(memory, to_in_pos, 0);
-	    writeCell(memory, number_tib_pos, 0);
+	    writeCell(memory, toInPos, 0);
+	    writeCell(memory, numberTibPos, 0);
 	}
     } catch (err) {
 	printOutput();
 	console.log('Error: ' + err);
-	writeCell(memory, number_tib_pos, 0);
-	writeCell(memory, to_in_pos,  0);
-	writeByte(memory, block_number_pos, 0);
+	writeCell(memory, numberTibPos, 0);
+	writeCell(memory, toInPos,  0);
+	writeByte(memory, blockNumberPos, 0);
 	writeByte(memory, 0, 0);
 	data_stack.p = 0;
 	return_stack.p = 0;
@@ -1033,29 +983,29 @@ memWriteNextByte(0);		// second byte is empty and define an execute word;
 memWriteNextByte(0);		// third byte is empty and define an literal word;
 memWriteNextCell(0);		// compilation vocabulary
 
-to_in_pos = env.dp;
+toInPos = env.dp;
 memWriteNextCell(0);               // >in
 
-number_tib_pos = env.dp;
+numberTibPos = env.dp;
 memWriteNextCell(0);
 
-tib_pos = env.dp;
+tibPos = env.dp;
 for (let i = 0; i < 1024; i++) {        // tib
     memWriteNextByte(0);
 }
 
-buffer_pos = env.dp;
+bufferPos = env.dp;
 for (let i = 0; i < 1024; i++) {        // buffer
     memWriteNextByte(0);
 }
 
-buffer_state_pos = env.dp;
+bufferStatePos = env.dp;
 memWriteNextByte(0);               // buffer state
 
-buffer_block_pos = env.dp;
+bufferBlockPos = env.dp;
 memWriteNextByte(0);               // buffer block state
 
-block_number_pos = env.dp;
+blockNumberPos = env.dp;
 memWriteNextByte(0);               // block number
 
 vocab("assembler"); definitions();
@@ -1085,7 +1035,7 @@ let w = env.code_pointer_addr(env.find_word('does>'));
 env.memWriteNextCell(2);
 env.memWriteNextCell(w);
 env.memWriteNextCell(1);
-env.memWriteNextCell(env.asm_vocab.p);
+env.memWriteNextCell(env.functions.p);
 w = env.code_pointer_addr(env.find_word('exit'));
 env.memWriteNextCell(2);
 env.memWriteNextCell(w);
@@ -1108,25 +1058,44 @@ env.memory[1] = 0;
 vocab("forth"); definitions();
 
 function backslash () {
-    writeCell(memory, to_in_pos, (Math.floor(readCell(memory, to_in_pos) / 64) + 1) * 64);
+    writeCell(memory, toInPos, (Math.floor(readCell(memory, toInPos) / 64) + 1) * 64);
 }
 
 asm_entry('\\', `env.backslash();`);
 asm_entry('load', `env.load();`);
 
-process.stdout.write('Welcome to forth interpreter prototype\n');
-process.stdout.write('Type \'bye\' to exit\n\n');
-
 use('core.f');
 
-env.number_tib_pos   = number_tib_pos;
-env.to_in_pos        = to_in_pos;
-env.block_number_pos = block_number_pos;
-env.tib_pos          = tib_pos;
+outputBuffer =
+    'Welcome to forth interpreter prototype\n' +
+    'Type \'bye\' to exit\n\n';
+
+env.numberTibPos   = numberTibPos;
+env.toInPos        = toInPos;
+env.blockNumberPos = blockNumberPos;
+env.tibPos         = tibPos;
 
 let arr = [];
 writeString(arr, 0, '1 load');
 for (let i = 2; i < arr.length; i++) {
-    writeByte(memory, tib_pos + i - 2, arr[i]);
+    writeByte(memory, tibPos + i - 2, arr[i]);
 }
-writeCell(memory, number_tib_pos, arr.length - 2);
+writeCell(memory, numberTibPos, arr.length - 2);
+
+function execute (str) {
+    let arr = [];
+    writeString(arr, 0, str);
+    for (let i = 2; i < arr.length; i++) {
+	writeByte(memory, tibPos + i - 2, arr[i]);
+    }
+    writeCell(memory, numberTibPos, arr.length - 2);
+    resume();
+}
+
+module.exports = {
+    processChar: processChar,
+    setWriteFn: (v) => { writeFn = v },
+    setExitFn: (v) => { exitFn = v },
+    execute: execute,
+    isOnPause: isOnPause
+};

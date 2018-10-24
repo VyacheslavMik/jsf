@@ -177,7 +177,7 @@ end-code
 \ words: immediate ;                                           
                                                                
 code immediate                                                 
-  w = env.compilation_vocabulary.word;                         
+  let w = env.compilation_vocabulary.word;                     
   env.memory[w] = 1;                                           
 end-code                                                       
                                                                
@@ -213,9 +213,9 @@ code here
 end-code                                                       
                                                                
 code does>                                                     
-  code_pointer = env.returnStackPopCell();                     
-  w = env.compilation_vocabulary.word;                         
-  pf = env.code_pointer_addr(w);                               
+  let code_pointer = env.returnStackPopCell();                 
+  let w = env.compilation_vocabulary.word;                     
+  let pf = env.code_pointer_addr(w);                           
   env.writeCell(env.memory, pf + 6, code_pointer);             
 end-code                                                       
                                                                
@@ -228,16 +228,16 @@ code create
   let name = env.readWord();                                   
   env.printValue('n[' + name + ']');                           
   if (name.trim() == '') { throw 'Empty string for name'; }    
-  nop_caddr = env.code_pointer_addr(env.find_word('nop'));     
-  exit_caddr = env.code_pointer_addr(env.find_word('exit'));   
+  let nopAddr = env.find_word('nop');                          
+  let nop_caddr = env.code_pointer_addr(nopAddr);              
+  let exitAddr = env.find_word('exit');                        
+  let exit_caddr = env.code_pointer_addr(exitAddr);            
   env.entry(name);                                             
-  env.memWriteNextCell(3);                                     
-  env.memWriteNextCell(env.dp + 10);                           
-  env.memWriteNextCell(2);                                     
-  env.memWriteNextCell(nop_caddr);                             
-  env.memWriteNextCell(2);                                     
-  env.memWriteNextCell(exit_caddr);                            
+  env.memWriteNextCell(3); env.memWriteNextCell(env.dp + 10);  
+  env.memWriteNextCell(2); env.memWriteNextCell(nop_caddr);    
+  env.memWriteNextCell(2); env.memWriteNextCell(exit_caddr);   
 end-code                                                       
+                                                               
 \ words: variable constant ' execute                           
                                                                
 : variable   create  0 ,  does>  ;                             
@@ -262,7 +262,7 @@ end-code
 : >resolve   here swap !  ;                                    
                                                                
 code ?branch                                                   
-  f = env.dataStackPopCell();                                  
+  let f = env.dataStackPopCell();                              
   let addr = env.returnStackPopCell();                         
   if (f == 0) { addr = env.readCell(env.memory, addr + 2); }   
   else { addr = addr + 4; }                                    
@@ -475,20 +475,20 @@ variable span
    0 do  key  dup 13 = if  space leave  else                   
    dup emit  over i + c!  1 span +!  then  loop  drop  then ;  
 code #tib                                                      
-   env.dataStackPushCell(env.number_tib_pos);                  
+   env.dataStackPushCell(env.numberTibPos);                    
 end-code                                                       
                                                                
 \ words: >in >body rs-clear ds-clear quit abort blk pad tib    
 \       forth-83                                               
-code >in   env.dataStackPushCell(env.to_in_pos); end-code      
+code >in   env.dataStackPushCell(env.toInPos); end-code        
 : >body  ; : forth-83  ;                                       
 code rs-clear   env.rs.p = 0;  end-code                        
 code ds-clear   env.ds.p = 0;  end-code                        
 : quit   0 #tib !  0 >in !  0 0 !  rs-clear  ;                 
 : abort   ds-clear  quit  ;                                    
-code blk  env.dataStackPushCell(env.block_number_pos); end-code
+code blk  env.dataStackPushCell(env.blockNumberPos); end-code  
 : pad   256 here +  ;                                          
-code tib  env.dataStackPushCell(env.tib_pos);  end-code        
+code tib  env.dataStackPushCell(env.tibPos);  end-code         
 : input-stream   blk c@ dup  if block else drop tib then ;     
 : input-limit   blk c@ dup if block 1024 else drop #tib @ tib  
    then +  ;                                                   
@@ -675,12 +675,12 @@ variable <#addr#>
 : d.  tuck dabs <# #s rot sign #> type space  ;                
 : ud. <# #s #> type space  ;                                   
 : u.  0 ud.  ;                                                 
-: .  dup 0> if 0 else -1 then d.  ;                            
+: .  dup 0 < if -1 else 0 then d.  ;                           
 : list   block  16 0 do cr i .  dup i 64 * +  64 type  loop ;  
 : d.r  >r tuck dabs <# #s rot sign #>  dup r> swap - dup 0 < if
    abort" Not enough space" else spaces type space then  ;     
                                                                
-                                                               
+code test  console.log(memory);  end-code                      
                                                                
                                                                
                                                                
