@@ -32,10 +32,12 @@ function runTest (desc, str, expected) {
 }
 
 async function runTests () {
-    for (let i = 0; i < tests.length; i++) {
-	let test = tests[i];
-	await runTest(test.desc, test.str, test.expected);
-    }
+    let test = tests[tests.length - 1];
+    await runTest(test.desc, test.str, test.expected);
+    // for (let i = 0; i < tests.length; i++) {
+    // 	let test = tests[i];
+    // 	await runTest(test.desc, test.str, test.expected);
+    // }
     process.exit();
 }
 

@@ -2,9 +2,9 @@
 -code test env.printValue(1); end-code test-
 -a[test] 1 -
 
--Backslash-
--\ 1 2 + .-
---
+-backslash-
+-3 7 + . \ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1 2 + .-
+-10 3 -
 
 -;code-
 -
@@ -94,6 +94,63 @@ test forth test assembler test
 -0 not .  -1 not .  7 not .  12 not .-
 --1 0 -8 -13 -
 
--Last-
--1 2 + .-
+-immediate-
+-
+: xxx 1 . ; immediate
+: yyy xxx 2 . ;
+-
+-c[xxx] c[yyy] 1 -
+
+-;-
+-: test 1 2 + . ; 3 4 + .-
+-c[test] 7 -
+
+-,-
+-here 7 , @ .-
+-7 -
+
+-c,-
+-here 8 c, c@ .-
+-8 -
+
+-0=-
+-1 0= .  0 0= .  -1 0= .-
+-0 -1 0 -
+
+-here-
+-here 7 , here swap - .-
+-2 -
+
+-does>-
+-: xxx create 10 , does> @ . ; xxx yyy yyy-
+-c[xxx] n[yyy] 10 -
+
+-nop-
+-1 2 nop + .-
 -3 -
+
+-create-
+-create xxx 8 , 7 c, xxx @ . xxx 2 + c@ .-
+-n[xxx] 8 7 -
+
+-variable-
+-variable xxx 10 xxx ! xxx @ .-
+-n[xxx] 10 -
+
+-constant-
+-17 constant xxx xxx .-
+-n[xxx] 17 -
+
+-'-
+-1 2 ' + execute .-
+-3 -
+
+-execute-
+-3 1 ' - execute .-
+-2 -
+
+-branch-
+-: xxx branch [ here 20 + ] literal 1 2 + . 3 7 + . ; xxx-
+-c[xxx] 10 -
+
+end
