@@ -1,4 +1,4 @@
--Code and end-code-
+-code and end-code-
 -code test env.printValue(1); end-code test-
 -a[test] 1 -
 
@@ -17,6 +17,83 @@ end-code
 -
 -c[test] n[xxx] 7 -
 
---
+-assembler, forth, definitions and search-
+-
+: test 1 . ;
+assembler definitions
+: test 2 . ;
+test forth test assembler test
+-
+-c[test] c[test] 2 1 2 -
+
+-exit-
+-: test 1 . exit 2 . ; test-
+-c[test] 1 -
+
+->=-
+-1 2 >= . 2 1 >= . 2 2 >= .-
+-0 -1 -1 -
+
+-@-
+-#tib @ .-
+-8 -
+
+-!-
+-7 pad ! pad @ .-
+-7 -
+
+-c! and c@-
+-25 pad c! pad c@ .-
+-25 -
+
+-+-
+-1 3 + .  -1 3 + .  1 -3 + . -1 -3 + .-
+-4 2 -2 -4 -
+
+---
+-1 3 - .  -1 3 - .  1 -3 - . -1 -3 - .-
+--2 -4 4 2 -
+
+-*-
+-3 6 * .  -3 6 * .  3 -6 * .  -3 -6 * .-
+-18 -18 -18 18 -
+
+-/-
+-7 3 / .  8 2 / .  -7 3 / .  -8 2 / .  7 -3 / .  8 -2 / .  -7 -3 / .  -8 -2 / .-
+-2 4 -3 -4 -3 -4 2 4 -
+
+->r r>-
+-: test  10 7 >r 1 + r> . . ; test-
+-c[test] 7 11 -
+
+-r@-
+-: test  7 10 >r >r r@ r> r> . . . ; test-
+-c[test] 10 7 7 -
+
+-dup-
+-2 dup .s-
+-<2> 2 2 -
+
+-drop-
+-2 3 1 drop .s-
+-<2> 2 3 -
+
+-swap-
+-2 3 swap .s-
+-<2> 3 2 -
+
+-=-
+-1 2 = .  2 1 = .  2 2 = .-
+-0 0 -1 -
+
+-:-
+-: test 3 7 + . ; test-
+-c[test] 10 -
+
+-not-
+-0 not .  -1 not .  7 not .  12 not .-
+--1 0 -8 -13 -
+
+-Last-
 -1 2 + .-
 -3 -

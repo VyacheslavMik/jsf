@@ -22,12 +22,12 @@ end-code
                                                                
 code >=                                                        
   let a = env.dataStackPopNum();                               
-                                                               
-                                                               
   let b = env.dataStackPopNum();                               
   if (b >= a) { env.dataStackPushCell(-1); }                   
   else        { env.dataStackPushCell(0); }                    
 end-code                                                       
+                                                               
+                                                               
                                                                
                                                                
 \ words: @ !                                                   

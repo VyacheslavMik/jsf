@@ -9,6 +9,7 @@ function addTest(desc, str, expected) {
 
 function runTest (desc, str, expected) {
     return new Promise(resolve => {
+	delete require.cache[require.resolve('./kernel.js')]
 	let kernel = require('./kernel.js');
 	kernel.setExitFn(() => { process.exit(); });
 	let fn = function () {
@@ -45,7 +46,7 @@ fs.readFile('tests', function (err, data) {
     }
 
     let content = data.toString();
-    var regex = /-([\s\S]*?)-\n-([\s\S]*?)-\n-([\s\S]*?)-/g;
+    var regex = /-([\s\S]*?)-\n-([\s\S]*?)-\n-([\s\S]*?)-\n/g;
     var match = regex.exec(content);
 
     while (match != null) {
