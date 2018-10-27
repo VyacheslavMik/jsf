@@ -420,18 +420,6 @@ pad c@ . pad 1+ c@ . pad 2+ c@ . pad 3 + c@ . pad 4 + c@ . pad 5 + c@ .
 -: xxx 5 0 do 5 0 do i 2 = if leave then i . loop i 3 = if leave then 1 +loop ; xxx-
 -c[xxx] 0 1 0 1 0 1 0 1 -
 
--key-
-- not_implemented -
---
-
--expect-
-- not_implemented -
---
-
--span-
-- not_implemented -
---
-
 -#tib-
 -123 #tib @ .-
 -12 -
@@ -529,7 +517,7 @@ pad c@ . pad 1+ c@ . pad 2+ c@ . pad 3 + c@ . pad 4 + c@ . pad 5 + c@ .
 -abcd-
 
 -space?-
--char  space? .  char y space? .-
+-32 pad c! pad space? .  char y pad c! pad space? .-
 --1 0 -
 
 --trailing-
