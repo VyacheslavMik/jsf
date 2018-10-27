@@ -371,8 +371,8 @@ end-code
 : cmove   dup 0= if drop drop drop else                        
    0 do over i + c@  over i + c!  loop drop drop then ;        
 : cmove>   dup 0= if drop drop drop else                       
-   -1 swap do  over i + c@  over i + c!  -1 +loop drop drop    
-   then ;                                                      
+   -1 swap 1- do  over i + c@  over i + c!  -1 +loop           
+   drop drop then ;                                            
 : count   1+ dup 1- c@ ;                                       
                                                                
 code depth                                                     
@@ -618,7 +618,7 @@ end-code
 code d-                                                        
   let ud2 = env.dataStackPopDCell();                           
   let ud1 = env.dataStackPopDCell();                           
-  env.dataStackPushDCell(ud2 - ud1);                           
+  env.dataStackPushDCell(ud1 - ud2);                           
 end-code                                                       
                                                                
 variable base  : decimal  10 base !  ;  decimal                
@@ -680,7 +680,7 @@ variable <#addr#>
 : d.r  >r tuck dabs <# #s rot sign #>  dup r> swap - dup 0 < if
    abort" Not enough space" else spaces type space then  ;     
                                                                
-code test  console.log(memory);  end-code                      
+                                                               
                                                                
                                                                
                                                                

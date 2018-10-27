@@ -153,4 +153,604 @@ test forth test assembler test
 -: xxx branch [ here 20 + ] literal 1 2 + . 3 7 + . ; xxx-
 -c[xxx] 10 -
 
+-compile-
+-: xxx compile + ; immediate : yyy 1 2 xxx . ; yyy-
+-c[xxx] c[yyy] 3 -
+
+->mark-
+-here dup >mark swap - . here swap - .-
+-2 4 -
+
+->resolve-
+->mark dup >resolve @ here = .-
+--1 -
+
+-?branch-
+-: xxx ?branch [ here 20 + ] literal 1 2 + . 3 7 + . ; -1 xxx 0 xxx-
+-c[xxx] 3 10 10 -
+
+-if-
+-: test if 1 . then 2 . ; 0 test -1 test-
+-c[test] 2 1 2 -
+
+-then-
+-: test if 3 . then ; -1 test-
+-c[test] 3 -
+
+-else-
+-: test if 1 . else 2 4 + . then ; 0 test -1 test-
+-c[test] 6 1 -
+
+-<mark-
+-here <mark = .-
+--1 -
+
+-<resolve-
+-<mark 3 , 10 , dup <resolve here 2 - @ = . here 4 - @ 2 = .-
+--1 -1 -
+
+-do-
+-: xxx 5 0 do i . loop ; xxx-
+-c[xxx] 0 1 2 3 4 -
+
+-+loop-
+-: xxx -2 5 do i . -2 +loop ; xxx-
+-c[xxx] 5 3 1 -
+
+-literal-
+-8 : xxx literal . ; xxx-
+-c[xxx] 8 -
+
+-loop-
+-: xxx 0 3 0 do i + loop . ; xxx-
+-c[xxx] 3 -
+
+-i-
+-: xxx 2 0 do i . 1 +loop ; xxx-
+-c[xxx] 0 1 -
+
+-j-
+-: xxx 3 0 do 3 0 do j . i . loop loop ; xxx-
+-c[xxx] 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 -
+
+-*/-
+-40000 2 * 2 / u.  40000 2 2 */ u.-
+-7232 40000 -
+
+-.s-
+-1 2 3 .s-
+-<3> 1 2 3 -
+
+-pick-
+-1 2 3 4 5 6 5 pick 1 pick 0 pick .s-
+-<9> 1 2 3 4 5 6 1 6 6 -
+
+-over-
+-1 2 over .s-
+-<3> 1 2 1 -
+
+-+!-
+-7 pad ! 9 pad +! pad @ .-
+-16 -
+
+-/mod-
+-10 7 /mod . .  -10 7 /mod . .  10 -7 /mod . .  -10 -7 /mod . .-
+-1 3 -2 4 -2 -4 1 -3 -
+
+-<-
+-7 8 < .  8 7 < .  8 8 < .-
+--1 0 0 -
+
+->-
+-7 8 > .  8 7 > .  8 8 > .-
+-0 -1 0 -
+
+-0<-
+-7 0< .  -7 0< .  0 0< .-
+-0 -1 0 -
+
+-0>-
+-7 0> .  -7 0> .  0 0> .-
+--1 0 0 -
+
+-1+-
+-7 1+ . -7 1+ .-
+-8 -6 -
+
+-1--
+-7 1- . -7 1- .-
+-6 -8 -
+
+-2+-
+-7 2+ . -7 2+ .-
+-9 -5 -
+
+-2--
+-7 2- . -7 2- .-
+-5 -9 -
+
+-2/-
+-8 2/ .  7 2/ .  -8 2/ .  -7 2/ .-
+-4 3 -4 -4 -
+
+-?dup-
+-1 ?dup 0 ?dup .s-
+-<3> 1 1 0 -
+
+-abs-
+-10 abs .  -10 abs .  0 abs .-
+-10 10 0 -
+
+-and-
+-0 -1 and .  -1 0 and .  0 0 and .  -1 -1 and .  7 8 and .  10 7 and .-
+-0 0 0 -1 0 2 -
+
+-or-
+-0 -1 or .  -1 0 or .  0 0 or .  -1 -1 or .  7 8 or .  10 7 or .-
+--1 -1 0 -1 15 15 -
+
+-cmove-
+-
+5 pad c!  6 pad 1+ c!  7 pad 2+ c!  8 pad 3 + c!  pad pad 1+ 2 cmove
+pad c@ . pad 1+ c@ . pad 2+ c@ . pad 3 + c@ .
+5 pad c!  6 pad 1+ c!  7 pad 2+ c!  pad pad 3 + 3 cmove
+pad c@ . pad 1+ c@ . pad 2+ c@ . pad 3 + c@ . pad 4 + c@ . pad 5 + c@ .
+-
+-5 5 5 8 5 6 7 5 6 7 -
+
+-cmove>-
+-
+5 pad c!  6 pad 1+ c!  7 pad 2+ c!  8 pad 3 + c!  pad pad 1+ 2 cmove>
+pad c@ . pad 1+ c@ . pad 2+ c@ . pad 3 + c@ .
+5 pad c!  6 pad 1+ c!  7 pad 2+ c!  pad pad 3 + 3 cmove>
+pad c@ . pad 1+ c@ . pad 2+ c@ . pad 3 + c@ . pad 4 + c@ . pad 5 + c@ .
+-
+-5 5 6 8 5 6 7 5 6 7 -
+
+-count-
+-34 word "abc" count . drop-
+-3 -
+
+-depth-
+-1 2 3 4 5 6 depth .-
+-6 -
+
+-fill-
+-pad 3 7 fill pad c@ . pad 1+ c@ . pad 2+ c@ . pad 3 + c@ .-
+-7 7 7 0 -
+
+-max-
+-7 8 max .  8 7 max .-
+-8 8 -
+
+-min-
+-7 8 min .  8 7 min .-
+-7 7 -
+
+-mod-
+-10 7 mod .  7 10 mod .  -10 7 mod .  10 -7 mod . -
+-3 7 4 -4 -
+
+-negate-
+--7 negate .  0 negate .  8 negate . -
+-7 0 -8 -
+
+-roll-
+-1 2 3 4 5 6 5 roll 2 roll 0 roll .s-
+-<6> 2 3 4 6 1 5 -
+
+-rot-
+-1 2 3 4 rot .s-
+-<4> 1 3 4 2 -
+
+-u<-
+--1 0 u< .  1 0 u< .  0 0 u< .  1 -1 u< .-
+-0 0 0 -1 -
+
+-um*-
+--1 -1 um* ud.-
+-4294836225 -
+
+-um/mod-
+--26215 6553 65533 um/mod u. u. -
+-6553 58980 -
+
+-xor-
+-1 1 xor .  1 0 xor .  0 1 xor .  0 0 xor .-
+-0 1 1 0 -
+
+-emit-
+-32 emit 120 emit 32 emit 48 emit 65 emit-
+- x 0A-
+
+-cr-
+-cr-
+-
+-
+
+-space-
+-space-
+- -
+
+-spaces-
+-0 spaces 5 spaces-
+-     -
+
+-type-
+-s" abcd" type-
+-abcd-
+
+-allot-
+-here 7 allot here swap - .-
+-7 -
+
+-begin-
+-: xxx 0 begin dup . 1+ dup 7 = not until ; xxx-
+-c[xxx] 0 1 2 3 4 5 6 -
+
+-until-
+-: xxx 48 begin dup emit 1+ dup 59 = not until ; xxx-
+-c[xxx] 0123456789:-
+
+-2!-
+-here 2 allot 7 over 5 swap 2! dup @ . 2+ @ .-
+-5 7 -
+
+-2@-
+-here 2 allot 7 over 5 swap 2! 2@ . .-
+-5 7 -
+
+-2drop-
+-1 2 3 2drop .s-
+-<1> 1 -
+
+-d=-
+--1 -1 -1 -1 d= .  0 0 0 1 d= .-
+--1 0 -
+
+-2dup-
+-5 7 2dup .s-
+-<4> 5 7 5 7 -
+
+-inc-var-
+-variable xxx 0 xxx ! xxx inc-var xxx inc-var xxx @ .-
+-n[xxx] 2 -
+
+-leave-
+-: xxx 5 0 do 5 0 do i 2 = if leave then i . loop i 3 = if leave then 1 +loop ; xxx-
+-c[xxx] 0 1 0 1 0 1 0 1 -
+
+-key-
+- not_implemented -
+--
+
+-expect-
+- not_implemented -
+--
+
+-span-
+- not_implemented -
+--
+
+-#tib-
+-123 #tib @ .-
+-12 -
+
+->in-
+-123 >in @ .-
+-9 -
+
+->body-
+-' + dup >body = .-
+--1 -
+
+-forth-83-
+-forth-83-
+--
+
+-rs-clear-
+-: xxx 2 . 1 rs-clear 3 . ; : yyy 1 . 1 xxx 4 . ; : zzz 5 . 1 yyy 8 . ; zzz .s-
+-c[xxx] c[yyy] c[zzz] 5 1 2 <3> 1 1 1 -
+
+-ds-clear-
+-1 2 3 4 5 6 7 8 ds-clear .s-
+-<0> -
+
+-quit-
+-: xxx quit ; immediate : yyy xxx 1 2 + . -
+-c[xxx] c[yyy] -
+
+-abort-
+-: xxx 2 . 1 abort 3 . ; : yyy 1 . 1 xxx 4 . ; : zzz 5 . 1 yyy 8 . ; zzz .s-
+-c[xxx] c[yyy] c[zzz] 5 1 2 -
+
+-blk-
+-s" blk c@ ." 45 block swap cmove 45 load-
+-45 -
+
+-pad-
+-1 pad ! 2 pad 2+ ! pad @ . pad 2+ @ .-
+-1 2 -
+
+-tib-
+-tib 11 type-
+-tib 11 type-
+
+-input-stream-
+-input-stream tib = . s" input-stream 46 block = ." 46 block swap cmove 46 load-
+--1 -1 -
+
+-input-limit-
+-input-limit tib 88 + = . s" input-limit 45 block 1024 + = ." 45 block swap cmove 45 load-
+--1 -1 -
+
+-input-next-char-
+-input-next-char 8 drop . c@ . : xxx input-next-char . ; xxx-
+--1 56 c[xxx] 0 -
+
+-skip-char-
+-char x skip-char xxxxxxxxxxxxxx8 . char y skip-char 8 .s-
+-8 <3> 120 121 8 -
+
+-wait-char-
+-char x wait-char this is skipx 1 2 + .s : xxx [char] y wait-char .s ; xxx-
+-<2> 120 3 c[xxx] <3> 120 3 0 -
+
+-word-
+-char x word xxxxxabcdx1 2 + . count type : xxx [char] y word count 0= . pad 1+ = . ; xxx-
+-3 abcdc[xxx] -1 -1 -
+
+-*/mod-
+-31723 122 143 */mod u. u.-
+-27064 54 -
+
+-d+-
+-0 1 1 0 d+ d.  -1 -1 -1 -1 d+ d.  1 0 -1 -1 d+ d. -2 -1 1 0 d+ d.-
+-65537 -2 0 -1 -
+
+-d<-
+-1 0 0 1 d< .  0 1 0 1 d< .  1 0 1 0 d< .-
+--1 0 0 -
+
+-dnegate-
+-1 0 dnegate d.  -1 -1 dnegate d.  0 0 dnegate d.-
+--1 1 0 -
+
+-.(-
+-: xxx .( some text) 1 2 + . ; 1 . xxx-
+-c[xxx] some text1 3 -
+
+-(-
+-: xxx ( this text is skiped) 1 2 + . ; xxx-
+-c[xxx] 3 -
+
+-s"-
+-s" abcd" type-
+-abcd-
+
+-space?-
+-char  space? .  char y space? .-
+--1 0 -
+
+--trailing-
+-
+s" abcd    " over swap -trailing . = .
+s"            " over swap -trailing . = .
+: xxx 32 word count over swap -trailing . = . ; xxx
+-
+-4 -1 0 -1 c[xxx] 0 -1 -
+
+-state-
+-state c@ . : xxx state c@ . ; immediate : yyy xxx ;-
+-0 c[xxx] c[yyy] 1 -
+
+-[-
+-: xxx [ 7 . ] 8 . ; xxx-
+-c[xxx] 7 8 -
+
+-]-
+-: xxx [ 1 2 + . ] ;-
+-c[xxx] 3 -
+
+-[compile]-
+-: xxx 1 2 + . ; immediate : yyy [compile] xxx ; yyy-
+-c[xxx] c[yyy] 3 -
+
+-[']-
+-: xxx ['] + 1 2 rot execute . ; xxx-
+-c[xxx] 3 -
+
+-."-
+-: xxx ." some text " 1 2 + . ; xxx-
+-c[xxx] some text 3 -
+
+-while-
+-: xxx 0 begin dup . 1+ dup 5 = not while 1 . repeat ; xxx-
+-c[xxx] 0 1 1 1 2 1 3 1 4 -
+
+-repeat-
+-: xxx begin 1 . 0 while 2 . repeat ; xxx-
+-c[xxx] 1 -
+
+-vocabulary-
+-
+vocabulary xxx
+vocabulary yyy
+xxx definitions : test 1 . ;
+yyy definitions : test 2 . ;
+xxx test
+yyy test
+-
+-n[xxx] n[yyy] c[test] c[test] 1 2 -
+
+-abort"-
+-: xxx 1 2 + . abort" some error" 3 4 + . ; 0 xxx -1 xxx-
+-c[xxx] 3 7 3 some error-
+
+-find-
+-
+vocabulary xxx
+vocabulary yyy
+xxx definitions : test 1 . ;
+yyy definitions : test 2 . ; immediate
+xxx 34 word test" find . execute
+yyy 34 word test" find . execute
+34 word zzz" dup find . = .
+-
+-n[xxx] n[yyy] c[test] c[test] -1 1 1 2 0 -1 -
+
+-forget-
+-
+vocabulary xxx
+vocabulary yyy
+xxx definitions : test 1 . ;
+yyy definitions : test 2 . ;
+xxx definitions : zzz 3 . ;
+zzz yyy test xxx test
+yyy definitions forget test
+34 word zzz" find . drop
+test xxx definitions forget test
+34 word test" find . drop
+-
+-n[xxx] n[yyy] c[test] c[test] c[zzz] 3 2 1 0 1 0 -
+
+-2variable-
+-2variable xxx 1 2 xxx 2! xxx 2@ .s-
+-n[xxx] <2> 1 2 -
+
+-2constant-
+-7 8 2constant xxx xxx .s-
+-n[xxx] <2> 7 8 -
+
+-d0=-
+-1 0 d0= .  -1 -1 d0= .  0 0 d0= .-
+-0 0 -1 -
+
+-2swap-
+-1 2 3 4 2swap .s-
+-<4> 3 4 1 2 -
+
+-2over-
+-1 2 3 4 2over .s-
+-<6> 1 2 3 4 1 2 -
+
+-2rot-
+-1 2 3 4 5 6 2rot .s-
+-<6> 3 4 5 6 1 2 -
+
+-dabs-
+-1 0 dabs d.  -1 -1 dabs d.  0 0 dabs d.-
+-1 1 0 -
+
+-dmax-
+-7 0 8 0 dmax d.  8 0 7 0 dmax d.  -1 -1 -1 -1 dmax d.-
+-8 8 -1 -
+
+-dmin-
+-7 0 8 0 dmin d.  7 0 -1 -1 dmin d.  -1 -1 -1 -1 dmin d.-
+-7 -1 -1 -
+
+-d2/-
+-8 0 d2/ d.  -7 -1 d2/ d.  0 0 d2/ d.-
+-4 -3 0 -
+
+-du<-
+--1 -1 1 0 du< .  0 0 0 0 du< .  1 0 2 0 du< .-
+-0 0 -1 -
+
+-d--
+-2 0 1 0 d- d.  -1 -1 -1 -1 d- d.  -1 -1 1 0 d- d.-
+-1 0 -2 -
+
+-base-
+-base @ .-
+-10 -
+
+-decimal-
+-15 15 16 base !  .  decimal .-
+-F 15 -
+
+-char-
+-char x .-
+-120 -
+
+-[char]-
+-: xxx [char] x . ; xxx-
+-c[xxx] 120 -
+
+-d*-
+--1 0 -1 0 d* ud.-
+-4294836225 -
+
+-convert-
+-
+10 0 s" 17abcd" drop 1- convert 4 type d.
+16 base ! 0 0 s" AFFff" drop 1- convert 2 type d.
+0 0 s" AFFff" drop 1- convert 2 type decimal d.
+-
+-abcd1017 ffAFF ff2815 -
+
+-d/mod-
+-
+10 0 7 d/mod d. .
+1 1 72 d/mod d. .
+7 3 63 d/mod d. .
+5 1 22 d/mod d. .
+-
+-1 3 910 17 3120 55 2979 3 -
+
+-<#-
+-21 0 <# # #> type-
+-1-
+
+-#>-
+-16 base ! 317 0 <# # # #> type-
+-3D-
+
+-#-
+-2 base ! 6 0 <# # # # #> type-
+-110-
+
+-hold-
+-16 base ! 255 0 <# # # char x hold char 0 hold #> type-
+-0xFF-
+
+-#s-
+-
+0 0 <# #s #> type
+16 base ! 317 0 <# #s #> type
+-
+-013D-
+
+-sign-
+-
+-1 <# char x hold sign char x hold 0 0 #> type
+1 <# char x hold sign char x hold 0 0 #> type
+-
+-x-xxx-
+
+-tuck-
+-3 1 2 tuck .s-
+-<4> 3 2 1 2 -
+
+-d.-
+--1 -1 d.-
+--1 -
+
+-ud.-
+--1 -1 ud.-
+-4294967295 -
+
+-u.-
+--1 u.-
+-65535 -
+
+-.-
+--7 .-
+--7 -
+
+-d.r-
+-10 0 7 d.r  100 0 1 d.r-
+-     10 Not enough space-
+
 end

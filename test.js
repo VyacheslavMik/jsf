@@ -2,6 +2,7 @@ process.stdin.setRawMode(true);
 process.stdin.on('data', (chunk) => { if (c == 3) process.exit(); });
 
 let tests = [];
+let failed = [];
 
 function addTest(desc, str, expected) {
     tests[tests.length] = { desc: desc, str: str, expected: expected };
@@ -18,7 +19,7 @@ function runTest (desc, str, expected) {
 		    if (actual == expected + ' ok\n') {
 			console.log('Passed "' + desc + '"');
 		    } else {
-			console.log('Failed "' + str + '". Actual: "' + actual.trim('\n') + '"');
+			failed[failed.length] = { desc: desc, str: str, actual: actual.trim('\n') };
 		    }
 		    resolve();
 		});
@@ -32,12 +33,20 @@ function runTest (desc, str, expected) {
 }
 
 async function runTests () {
-    let test = tests[tests.length - 1];
-    await runTest(test.desc, test.str, test.expected);
-    // for (let i = 0; i < tests.length; i++) {
-    // 	let test = tests[i];
-    // 	await runTest(test.desc, test.str, test.expected);
-    // }
+    console.log("Passed tests");
+    console.log();
+    for (let i = 0; i < tests.length; i++) {
+    	let test = tests[i];
+    	await runTest(test.desc, test.str, test.expected);
+    }
+    console.log();
+    console.log();
+    console.log("Failed tests");
+    console.log();
+    for (let i = 0; i < failed.length; i++) {
+	let test = failed[i];
+	console.log('Failed "' + test.desc + '" ("' + test.str + '"). Actual: "' + test.actual + '"');
+    }
     process.exit();
 }
 
