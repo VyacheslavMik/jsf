@@ -65,8 +65,8 @@ end-code
 \ words: +                                                     
                                                                
 code +                                                         
-  let a = env.dataStackPopCell();                              
-  let b = env.dataStackPopCell();                              
+  let a = env.dsPop();                                         
+  let b = env.dsPop();                                         
   env.dsPush(a + b);                                           
 end-code                                                       
                                                                
@@ -81,14 +81,14 @@ end-code
 \ words: - *                                                   
                                                                
 code -                                                         
-  let a = env.dataStackPopCell();                              
-  let b = env.dataStackPopCell();                              
+  let a = env.dsPop();                                         
+  let b = env.dsPop();                                         
   env.dsPush(b - a);                                           
 end-code                                                       
                                                                
 code *                                                         
-  let a = env.dataStackPopCell();                              
-  let b = env.dataStackPopCell();                              
+  let a = env.dsPop();                                         
+  let b = env.dsPop();                                         
   env.dsPush(a * b);                                           
 end-code                                                       
                                                                
@@ -114,7 +114,7 @@ end-code
                                                                
 code >r                                                        
   let next_word = env.rsPop();                                 
-  env.rsPush(env.dataStackPopCell());                          
+  env.rsPush(env.dsPop());                                     
   env.rsPush(next_word);                                       
 end-code                                                       
                                                                
@@ -139,21 +139,21 @@ code dup
 end-code                                                       
                                                                
 code drop                                                      
-  env.dataStackPopCell();                                      
+  env.dsPop();                                                 
 end-code                                                       
                                                                
 \ words: swap =                                                
                                                                
 code swap                                                      
-  let a = env.dataStackPopCell();                              
-  let b = env.dataStackPopCell();                              
+  let a = env.dsPop();                                         
+  let b = env.dsPop();                                         
   env.dsPush(a);                                               
   env.dsPush(b);                                               
 end-code                                                       
                                                                
 code =                                                         
-  let a = env.dataStackPopCell();                              
-  let b = env.dataStackPopCell();                              
+  let a = env.dsPop();                                         
+  let b = env.dsPop();                                         
   env.dsPush(a == b, 'b');                                     
 end-code                                                       
                                                                
@@ -170,7 +170,7 @@ code :
 end-code                                                       
                                                                
 code not                                                       
-  env.dsPush(~env.dataStackPopCell());                         
+  env.dsPush(~env.dsPop());                                    
 end-code                                                       
                                                                
                                                                
@@ -193,12 +193,12 @@ end-code immediate
 \ words: , c, 0=                                               
                                                                
 code ,                                                         
-  let v = env.dataStackPopCell();                              
+  let v = env.dsPop();                                         
   env.memWriteNextCell(v);                                     
 end-code                                                       
                                                                
 code c,                                                        
-  let v = env.dataStackPopCell();                              
+  let v = env.dsPop();                                         
   env.memWriteNextByte(v);                                     
 end-code                                                       
                                                                
@@ -262,7 +262,7 @@ end-code
 : >resolve   here swap !  ;                                    
                                                                
 code ?branch                                                   
-  let f = env.dataStackPopCell();                              
+  let f = env.dsPop();                                         
   let addr = env.rsPop();                                      
   if (f == 0) { addr = env.readCell(env.memory, addr + 2); }   
   else { addr = addr + 4; }                                    
@@ -295,9 +295,9 @@ variable (do)-w1  variable (do)-w2
 : j   r> r> r> r> r> dup >r swap >r swap >r swap >r swap >r ;  
                                                                
 code */                                                        
-  let n3 = env.dataStackPopCell();                             
-  let n2 = env.dataStackPopCell();                             
-  let n1 = env.dataStackPopCell();                             
+  let n3 = env.dsPop();                                        
+  let n2 = env.dsPop();                                        
+  let n1 = env.dsPop();                                        
   env.dsPush(Math.floor((n1*n2)/n3));                          
 end-code                                                       
                                                                
@@ -309,7 +309,7 @@ code .s
 end-code                                                       
                                                                
 code pick                                                      
-  let a = env.dataStackPopCell();                              
+  let a = env.dsPop();                                         
   let b = env.readCell(env.ds.arr, env.ds.p - (a + 1) * 2);    
   env.dsPush(b);                                               
 end-code                                                       
@@ -356,14 +356,14 @@ end-code
 : abs   dup 0< if -1 * then ;                                  
                                                                
 code and                                                       
-  let a = env.dataStackPopCell();                              
-  let b = env.dataStackPopCell();                              
+  let a = env.dsPop();                                         
+  let b = env.dsPop();                                         
   env.dsPush(a & b);                                           
 end-code                                                       
                                                                
 code or                                                        
-  let a = env.dataStackPopCell();                              
-  let b = env.dataStackPopCell();                              
+  let a = env.dsPop();                                         
+  let b = env.dsPop();                                         
   env.dsPush(a | b);                                           
 end-code                                                       
 \ words: cmove cmove> count depth fill max                     
@@ -389,7 +389,7 @@ end-code
 : negate   0 swap - ;                                          
                                                                
 code roll                                                      
-  let n = env.dataStackPopCell() + 1;                          
+  let n = env.dsPop() + 1;                                     
   let v = env.readCell(env.ds.arr, env.ds.p - 2 * n);          
   let idx = env.ds.p - env.ds.arr.length - 2 * n;              
   env.ds.arr.splice(idx, 2);                                   
@@ -401,14 +401,14 @@ end-code
 \ words: u< um*                                                
                                                                
 code u<                                                        
-  let u2 = env.dataStackPopCell();                             
-  let u1 = env.dataStackPopCell();                             
+  let u2 = env.dsPop();                                        
+  let u1 = env.dsPop();                                        
   env.dsPush(u1 < u2, 'b');                                    
 end-code                                                       
                                                                
 code um*                                                       
-  let u2 = env.dataStackPopCell();                             
-  let u1 = env.dataStackPopCell();                             
+  let u2 = env.dsPop();                                        
+  let u1 = env.dsPop();                                        
   env.dsPush(u1 * u2, 'd');                                    
 end-code                                                       
                                                                
@@ -417,7 +417,7 @@ end-code
 \ word: um/mod                                                 
                                                                
 code um/mod                                                    
-  let u1 = env.dataStackPopCell();                             
+  let u1 = env.dsPop();                                        
   let ud = env.dataStackPopDCell();                            
   let u3 = Math.floor(ud / u1);                                
   env.dsPush(ud - u1 * u3);                                    
@@ -433,13 +433,13 @@ end-code
 \ words: xor emit cr space spaces                              
                                                                
 code xor                                                       
-  let w2 = env.dataStackPopCell();                             
-  let w1 = env.dataStackPopCell();                             
+  let w2 = env.dsPop();                                        
+  let w1 = env.dsPop();                                        
   env.dsPush(w1 ^ w2);                                         
 end-code                                                       
                                                                
 code emit                                                      
-  let c = env.dataStackPopCell();                              
+  let c = env.dsPop();                                         
   env.printChar(c);                                            
 end-code                                                       
                                                                
@@ -561,7 +561,7 @@ end-code
 \ words: vocab vocabulary vocabulary-name vocabulary-name!     
 \        definitions assembler forth                           
 code vocab                                                     
-  let addr = env.dataStackPopCell();                           
+  let addr = env.dsPop();                                      
   let s = env.memReadString(addr);                             
   env.vocabulary(s);                                           
 end-code                                                       
