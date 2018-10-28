@@ -9,15 +9,23 @@ function readFile (fileName, resolve) {
 
 kernel.setReadFileFn(readFile);
 
+var output = document.getElementById('output');
+
 kernel.setWriteFn((outputBuffer) => {
     console.log(outputBuffer);
+    output.textContent += outputBuffer;
 });
 
-function exec() {
-    kernel.execute('1 2 + .');
+var input = document.getElementById('input');
+input.onchange = (ev) => {
+    console.log(ev.target.value);
+    output.textContent += ev.target.value + ' ';
+    kernel.execute(ev.target.value);
+    input.value = '';
+}
+
+window.onclick = () => {
+    input.focus();
 }
 
 kernel.run();
-
-var button = document.getElementById('clickme');
-button.addEventListener('click', exec);
