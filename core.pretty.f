@@ -21,8 +21,8 @@ code exit
 end-code                                                       
                                                                
 code >=                                                        
-  let a = env.dataStackPopNum();                               
-  let b = env.dataStackPopNum();                               
+  let a = env.dsPop('n');                                      
+  let b = env.dsPop('n');                                      
   env.dsPush(b >= a, 'b');                                     
 end-code                                                       
                                                                
@@ -97,8 +97,8 @@ end-code
 \ words: /                                                     
                                                                
 code /                                                         
-  let a = env.dataStackPopNum();                               
-  let b = env.dataStackPopNum();                               
+  let a = env.dsPop('n');                                      
+  let b = env.dsPop('n');                                      
   env.dsPush(Math.floor(b / a));                               
 end-code                                                       
                                                                
@@ -321,24 +321,24 @@ end-code
 \ words: /mod <                                                
                                                                
 code /mod                                                      
-  let n2 = env.dataStackPopNum();                              
-  let n1 = env.dataStackPopNum();                              
+  let n2 = env.dsPop('n');                                     
+  let n1 = env.dsPop('n');                                     
   let n4 = Math.floor(n1 / n2);                                
   env.dsPush(n1 - n2 * n4);                                    
   env.dsPush(n4);                                              
 end-code                                                       
                                                                
 code <                                                         
-  let n2 = env.dataStackPopNum();                              
-  let n1 = env.dataStackPopNum();                              
+  let n2 = env.dsPop('n');                                     
+  let n1 = env.dsPop('n');                                     
   env.dsPush(n1 < n2, 'b');                                    
 end-code                                                       
                                                                
 \ words: > 0< 0> 1+ 1- 2+ 2- 2/                                
                                                                
 code >                                                         
-  let n2 = env.dataStackPopNum();                              
-  let n1 = env.dataStackPopNum();                              
+  let n2 = env.dsPop('n');                                     
+  let n1 = env.dsPop('n');                                     
   env.dsPush(n1 > n2, 'b');                                    
 end-code                                                       
                                                                
@@ -418,7 +418,7 @@ end-code
                                                                
 code um/mod                                                    
   let u1 = env.dsPop();                                        
-  let ud = env.dataStackPopDCell();                            
+  let ud = env.dsPop('ud');                                    
   let u3 = Math.floor(ud / u1);                                
   env.dsPush(ud - u1 * u3);                                    
   env.dsPush(u3);                                              
@@ -513,29 +513,29 @@ code tib  env.dsPush(env.tibPos);  end-code
 \ words: */mod                                                 
                                                                
 code */mod                                                     
-  let n3 = env.dataStackPopNum();                              
-  let n2 = env.dataStackPopNum();                              
-  let n1 = env.dataStackPopNum();                              
+  let n3 = env.dsPop('n');                                     
+  let n2 = env.dsPop('n');                                     
+  let n1 = env.dsPop('n');                                     
   n1 *= n2; n2 = n3;                                           
   let n4 = Math.floor(n1 / n2);                                
   env.dsPush(n1 - n2 * n4);                                    
   env.dsPush(n4);                                              
 end-code                                                       
 code d+                                                        
-  let wd2 = env.dataStackPopDCell();                           
-  let wd1 = env.dataStackPopDCell();                           
+  let wd2 = env.dsPop('ud');                                   
+  let wd1 = env.dsPop('ud');                                   
  env.dsPush(wd1 + wd2, 'd');                                   
 end-code                                                       
 \ words: d< dnegate                                            
                                                                
 code d<                                                        
-  let d2 = env.dataStackPopDCellNum();                         
-  let d1 = env.dataStackPopDCellNum();                         
+  let d2 = env.dsPop('d');                                     
+  let d1 = env.dsPop('d');                                     
   env.dsPush(d1 < d2, 'b');                                    
 end-code                                                       
                                                                
 code dnegate                                                   
-  let d = env.dataStackPopDCellNum();                          
+  let d = env.dsPop('d');                                      
   env.dsPush(-d, 'd');                                         
 end-code                                                       
                                                                
@@ -593,7 +593,7 @@ code forget  env.forget();  end-code
 \ words: dabs dmax dmin d2/                                    
                                                                
 code dabs                                                      
-  let d = env.dataStackPopDCellNum();                          
+  let d = env.dsPop('d');                                      
   if (d < 0) { d = -d; }                                       
   env.dsPush(d, 'd');                                          
 end-code                                                       
@@ -602,21 +602,21 @@ end-code
 : dmin  2over 2over d< not if  2swap  then  2drop  ;           
                                                                
 code d2/                                                       
-  let d = env.dataStackPopDCellNum();                          
+  let d = env.dsPop('d');                                      
   env.dsPush(d / 2, 'd');                                      
 end-code                                                       
                                                                
 \ words: du< d- base decimal                                   
                                                                
 code du<                                                       
-  let ud2 = env.dataStackPopDCell();                           
-  let ud1 = env.dataStackPopDCell();                           
+  let ud2 = env.dsPop('ud');                                   
+  let ud1 = env.dsPop('ud');                                   
   env.dsPush(ud1 < ud2, 'b');                                  
 end-code                                                       
                                                                
 code d-                                                        
-  let ud2 = env.dataStackPopDCell();                           
-  let ud1 = env.dataStackPopDCell();                           
+  let ud2 = env.dsPop('ud');                                   
+  let ud1 = env.dsPop('ud');                                   
   env.dsPush(ud1 - ud2, 'd');                                  
 end-code                                                       
                                                                
@@ -634,8 +634,8 @@ variable base  : decimal  10 base !  ;  decimal
 char-digit" 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmno
 qrstuvwxyz:;<=>?@[]^"                                          
 code d*                                                        
-  let wd2 = env.dataStackPopDCellNum();                        
-  let wd1 = env.dataStackPopDCellNum();                        
+  let wd2 = env.dsPop('d');                                    
+  let wd1 = env.dsPop('d');                                    
   env.dsPush(wd1 * wd2, 'd');                                  
 end-code                                                       
 \ words: digit? accumulate convert d/mod                       
@@ -648,8 +648,8 @@ end-code
                                                                
 \ ( d1 n1 -- n2 d2 )                                           
 code d/mod                                                     
-  let n1 = env.dataStackPopNum();                              
-  let d1 = env.dataStackPopDCell();                            
+  let n1 = env.dsPop('n');                                     
+  let d1 = env.dsPop('ud');                                    
   let d2 = Math.floor(d1 / n1);                                
   env.dsPush(d1 - n1 * d2);                                    
   env.dsPush(d2, 'd');                                         

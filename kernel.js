@@ -207,17 +207,19 @@ function dsPush (value, type) {
 	stackPushCell(ds, value);
     }
 }
+
 function dsPop (type) {
     if (type == 'n') {
+	return stackPopNum(ds);
     } else if (type == 'd') {
+	return stackPopDCellNum(ds);
+    } else if (type == 'ud') {
+	return stackPopDCell(ds);
     } else {
 	return stackPopCell(ds);
     }
 }
-function dataStackPopCell      ()      { return stackPopCell(ds);      }
-function dataStackPopDCell     ()      { return stackPopDCell(ds);     }
-function dataStackPopDCellNum  ()      { return stackPopDCellNum(ds);  }
-function dataStackPopNum       ()      { return stackPopNum(ds);       }
+
 function dsPeek     ()      { return stackPeekCell(ds);     }
 
 function rsPush   (value) { stackPushCell(rs, value);   }
@@ -279,7 +281,7 @@ function popBlock() {
     if (blk.num != 0) {
 	dsPush(blk.num);
 	block();
-	dataStackPopCell();
+	dsPop();
     }
     writeByte(memory, blockNumberPos, blk.num);
     writeCell(memory, toInPos, blk.toIn);
@@ -370,7 +372,7 @@ function bufferUpdate () {
 }
 
 function block () {
-    let u = dataStackPopCell();
+    let u = dsPop();
 
     if (u == 0) throw '0 block is denied';
     
@@ -403,7 +405,7 @@ function load () {
     let toIn = readCell(memory, toInPos);
 
     block();
-    dataStackPopCell();
+    dsPop();
 
     blks.push({ num: blk, toIn: toIn });
 
@@ -535,7 +537,7 @@ function memReadString (addr) {
 }
 
 function find () {
-    let saddr = dataStackPopCell();
+    let saddr = dsPop();
     let count = readByte(memory, saddr);
     let str = '';
     for (let i = 0; i < count; i++) {
@@ -626,11 +628,6 @@ let env = {memory:                memory,
 
 	   toBody:                toBody,
 
-	   dataStackPopCell:      dataStackPopCell,
-	   dataStackPopNum:       dataStackPopNum,
-	   dataStackPopDCell:     dataStackPopDCell,
-	   dataStackPopDCellNum:  dataStackPopDCellNum,
-
 	   dsPop:                 dsPop,
 	   dsPush:                dsPush,
 	   dsPeek:                dsPeek,
@@ -691,7 +688,7 @@ function toBody (wordAddr) {
 
 function dump () {
     printLast("\n------------");
-    let flag = dataStackPopCell();
+    let flag = dsPop();
     if (flag > 9 || flag < 1) {
 	printLast("end start 1 - memory.slice(start, end)");
 	printLast("          2 - functions");
@@ -704,8 +701,8 @@ function dump () {
 	printLast("          9 - vocabulary words");
     }
     if (flag == 1) {
-	let start = dataStackPopCell();
-	let end   = dataStackPopCell();
+	let start = dsPop();
+	let end   = dsPop();
 	printValue(memory.slice(start, end));
     }
     if (flag == 2) {

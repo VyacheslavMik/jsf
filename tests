@@ -9,7 +9,7 @@
 -;code-
 -
 : test create , ;code
-  let addr = env.dataStackPopCell();
+  let addr = env.dsPop();
   let v = env.readCell(env.memory, addr);
   env.printValue(v);
 end-code
