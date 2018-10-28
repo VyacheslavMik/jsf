@@ -99,3 +99,5 @@ Some utils
 copy block: <from-block> <to-block> cp
 clear block: <block> db
 ```
+
+browserify interpreter.browser.js -o bundle.js

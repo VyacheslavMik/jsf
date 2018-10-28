@@ -1,3 +1,5 @@
+const removeSeq = Buffer.from([8, 32, 8]);
+
 let kernel = require('./kernel.js');
 let fs = require('fs');
 
@@ -16,7 +18,13 @@ function writeFile (fileName, output, resolve) {
     fs.writeFile(fileName, output, resolve);
 }
 
-kernel.setWriteFn((outputBuffer) => { process.stdout.write(outputBuffer); });
+kernel.setWriteFn((outputBuffer) => {
+    if (outputBuffer.charCodeAt(0) == 127) {
+	process.stdout.write(removeSeq);
+    } else {
+	process.stdout.write(outputBuffer);
+    }
+});
 kernel.setExitFn(() => { process.exit(); });
 kernel.setReadFileFn(readFile);
 kernel.setWriteFileFn(writeFile);
