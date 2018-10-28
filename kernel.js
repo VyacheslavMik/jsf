@@ -196,8 +196,22 @@ function peekJsFunction (addr) {
 function dsPush (value, type) {
     if (type == 'd') {
 	stackPushDCell(ds, value)
-    } else {
+    } else if (type == 'b') {
+	if (value) {
+	    stackPushCell(ds, -1);
+	} else {
+	    stackPushCell(ds, 0);
+	}
+    }
+    else {
 	stackPushCell(ds, value);
+    }
+}
+function dsPop (type) {
+    if (type == 'n') {
+    } else if (type == 'd') {
+    } else {
+	return stackPopCell(ds);
     }
 }
 function dataStackPopCell      ()      { return stackPopCell(ds);      }
@@ -616,7 +630,9 @@ let env = {memory:                memory,
 	   dataStackPopNum:       dataStackPopNum,
 	   dataStackPopDCell:     dataStackPopDCell,
 	   dataStackPopDCellNum:  dataStackPopDCellNum,
-	   dsPush:     dsPush,
+
+	   dsPop:                 dsPop,
+	   dsPush:                dsPush,
 	   dsPeek:                dsPeek,
 
 	   rsPush:                rsPush,

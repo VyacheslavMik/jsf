@@ -23,23 +23,23 @@ end-code
 code >=                                                        
   let a = env.dataStackPopNum();                               
   let b = env.dataStackPopNum();                               
-  if (b >= a) { env.dsPush(-1); }                              
-  else        { env.dsPush(0); }                               
+  env.dsPush(b >= a, 'b');                                     
 end-code                                                       
+                                                               
                                                                
                                                                
                                                                
                                                                
 \ words: @ !                                                   
 code @                                                         
-  let addr = env.dataStackPopCell();                           
+  let addr = env.dsPop();                                      
   let val = env.readCell(env.memory, addr);                    
   env.dsPush(val);                                             
 end-code                                                       
                                                                
 code !                                                         
-  let addr = env.dataStackPopCell();                           
-  let val = env.dataStackPopCell();                            
+  let addr = env.dsPop();                                      
+  let val = env.dsPop();                                       
   env.writeCell(env.memory, addr, val);                        
 end-code                                                       
                                                                
@@ -48,14 +48,14 @@ end-code
                                                                
 \ words: c@ c!                                                 
 code c@                                                        
-  let addr = env.dataStackPopCell();                           
+  let addr = env.dsPop();                                      
   let val = env.readByte(env.memory, addr);                    
   env.dsPush(val);                                             
 end-code                                                       
                                                                
 code c!                                                        
-  let addr = env.dataStackPopCell();                           
-  let val = env.dataStackPopCell();                            
+  let addr = env.dsPop();                                      
+  let val = env.dsPop();                                       
   env.writeByte(env.memory, addr, val);                        
 end-code                                                       
                                                                
@@ -154,9 +154,9 @@ end-code
 code =                                                         
   let a = env.dataStackPopCell();                              
   let b = env.dataStackPopCell();                              
-  if (a == b) { env.dsPush(-1); }                              
-  else { env.dsPush(0); }                                      
+  env.dsPush(a == b, 'b');                                     
 end-code                                                       
+                                                               
                                                                
 \ words: : not                                                 
                                                                
@@ -331,16 +331,15 @@ end-code
 code <                                                         
   let n2 = env.dataStackPopNum();                              
   let n1 = env.dataStackPopNum();                              
-  if (n1 < n2) { env.dsPush(-1); }                             
-  else         { env.dsPush(0); }                              
+  env.dsPush(n1 < n2, 'b');                                    
 end-code                                                       
+                                                               
 \ words: > 0< 0> 1+ 1- 2+ 2- 2/                                
                                                                
 code >                                                         
   let n2 = env.dataStackPopNum();                              
   let n1 = env.dataStackPopNum();                              
-  if (n1 > n2) { env.dsPush(-1); }                             
-  else         { env.dsPush(0); }                              
+  env.dsPush(n1 > n2, 'b');                                    
 end-code                                                       
                                                                
 : 0<   0 <  ;                                                  
@@ -350,6 +349,7 @@ end-code
 : 2+   2 +  ;                                                  
 : 2-   2 -  ;                                                  
 : 2/   2 /  ;                                                  
+                                                               
 \ words: ?dup abs and or                                       
                                                                
 : ?dup   dup 0= not  if dup then  ;                            
@@ -403,8 +403,7 @@ end-code
 code u<                                                        
   let u2 = env.dataStackPopCell();                             
   let u1 = env.dataStackPopCell();                             
-  if (u1 < u2) { env.dsPush(-1); }                             
-  else         { env.dsPush(0); }                              
+  env.dsPush(u1 < u2, 'b');                                    
 end-code                                                       
                                                                
 code um*                                                       
@@ -412,6 +411,7 @@ code um*
   let u1 = env.dataStackPopCell();                             
   env.dsPush(u1 * u2, 'd');                                    
 end-code                                                       
+                                                               
                                                                
                                                                
 \ word: um/mod                                                 
@@ -531,7 +531,7 @@ end-code
 code d<                                                        
   let d2 = env.dataStackPopDCellNum();                         
   let d1 = env.dataStackPopDCellNum();                         
-  env.dsPush(d1 < d2 ? -1 : 0);                                
+  env.dsPush(d1 < d2, 'b');                                    
 end-code                                                       
                                                                
 code dnegate                                                   
@@ -611,8 +611,7 @@ end-code
 code du<                                                       
   let ud2 = env.dataStackPopDCell();                           
   let ud1 = env.dataStackPopDCell();                           
-  if (ud1 < ud2) { env.dsPush(-1); }                           
-  else { env.dsPush(0); }                                      
+  env.dsPush(ud1 < ud2, 'b');                                  
 end-code                                                       
                                                                
 code d-                                                        
@@ -622,6 +621,7 @@ code d-
 end-code                                                       
                                                                
 variable base  : decimal  10 base !  ;  decimal                
+                                                               
 \ words: char [char] d* char-digit" input-char                 
                                                                
 : input-char   input-stream >in @ +  dup input-limit >=        
