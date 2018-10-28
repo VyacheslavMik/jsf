@@ -7,8 +7,8 @@ let vocabularies = [];
 let blks = [];
 
 let blocks = [];
-let fileName = '';
 
+let fileName;
 let toInPos = 0;
 let tibPos = 0;
 let numberTibPos = 0;
@@ -25,6 +25,8 @@ let isWaitingKey = false;
 
 let writeFn;
 let exitFn;
+let readFileFn;
+let writeFileFn;
 
 function readCell (arr, addr) {
     return arr[addr] * 256 + arr[addr + 1];
@@ -790,7 +792,11 @@ function dump () {
     }
 }
 
-var fs = require('fs');
+function readFile (fileName, resolve) {
+    if (readFileFn != undefined) {
+	readFileFn(fileName, resolve);
+    }
+}
 
 function use (name) {
     pause();
@@ -799,17 +805,11 @@ function use (name) {
     writeByte(memory, bufferBlockPos, 0);
     writeByte(memory, blockNumberPos, 0);
 
-    fileName = __dirname + '/' + name;
-    if (!fs.existsSync(fileName)) {
-	resume();
-	return;
-    }
-
-    fs.readFile( fileName, function (err, data) {
+    readFile(name, function (err, content) {
 	if (err) {
 	    throw err; 
 	}
-	let content = data.toString();
+	fileName = name;
 	let count = Math.ceil(content.length / 1024);
 
 	for (var i = 0; i < count; i++) {
@@ -825,6 +825,12 @@ function use (name) {
     });
 }
 
+function writeFile (output, resolve) {
+    if (writeFileFn != undefined) {
+	writeFileFn(fileName, output, resolve);
+    }
+}
+
 function saveFile () {
     let output = '';
     for(let i = 0; i < blocks.length; i++) {
@@ -837,11 +843,8 @@ function saveFile () {
 	}
     }
     pause();
-    fs.writeFile(fileName, output, function(err) {
-	if(err) {
-	    console.log(err);
-	    process.exit();
-	}
+    writeFile(output, function(err) {
+	if(err) { throw err; }
 	resume();
     }); 
 }
@@ -1032,7 +1035,7 @@ function backslash () {
 jsEntry('\\', `env.backslash();`);
 jsEntry('load', `env.load();`);
 
-use('core.f');
+//use('core.f');
 
 outputBuffer =
     'Welcome to forth interpreter prototype\n' +
@@ -1052,17 +1055,24 @@ function placeOnTib(str) {
     writeCell(memory, numberTibPos, arr.length - 2);
 }
 
-placeOnTib('1 load');
+//placeOnTib('1 load');
 
 function execute (str) {
     placeOnTib(str);
     resume();
 }
 
+function run () {
+    use('core.f');
+    placeOnTib('1 load');    
+}
+
 module.exports = {
-    processChar: processChar,
+    processChar, run, execute,
     setWriteFn: (v) => { writeFn = v },
     setExitFn: (v) => { exitFn = v },
-    execute: execute,
-    isOnPause: isOnPause
+    setWriteFileFn: (v) => { writeFileFn = v },
+    setReadFileFn: (v) => { readFileFn = v },
+    setOnPauseFn: (v) => { onPauseFn = v },
+    isOnPause: () => { return isOnPause; }
 };

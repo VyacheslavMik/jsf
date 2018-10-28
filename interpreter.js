@@ -1,7 +1,25 @@
 let kernel = require('./kernel.js');
+let fs = require('fs');
+
+function readFile (fileName, resolve) {
+    if (!fs.existsSync(fileName)) {
+	setTimeout(() => { resolve(null, ''); }, 0)
+    } else {
+	fs.readFile(fileName, function (err, data) {
+	    content = data.toString();
+	    resolve(err, content);
+	});
+    }
+}
+
+function writeFile (fileName, output, resolve) {
+    fs.writeFile(fileName, output, resolve);
+}
 
 kernel.setWriteFn((outputBuffer) => { process.stdout.write(outputBuffer); });
 kernel.setExitFn(() => { process.exit(); });
+kernel.setReadFileFn(readFile);
+kernel.setWriteFileFn(writeFile);
 
 process.stdin.setRawMode(true);
 process.stdin.on('data', (chunk) => {
@@ -13,3 +31,5 @@ process.stdin.on('data', (chunk) => {
 	}
     }
 });
+
+kernel.run();
