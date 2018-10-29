@@ -1,6 +1,6 @@
 -code and end-code-
 -code test env.printValue(1); end-code test-
--a[test] 1 -
+-1 -
 
 -backslash-
 -3 7 + . \ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1 2 + .-
@@ -15,7 +15,7 @@
 end-code
 7 test xxx xxx
 -
--c[test] n[xxx] 7 -
+-7 -
 
 -assembler, forth, definitions and search-
 -
@@ -24,11 +24,11 @@ assembler definitions
 : test 2 . ;
 test forth test assembler test
 -
--c[test] c[test] 2 1 2 -
+-2 1 2 -
 
 -exit-
 -: test 1 . exit 2 . ; test-
--c[test] 1 -
+-1 -
 
 ->=-
 -1 2 >= . 2 1 >= . 2 2 >= .-
@@ -64,11 +64,11 @@ test forth test assembler test
 
 ->r r>-
 -: test  10 7 >r 1 + r> . . ; test-
--c[test] 7 11 -
+-7 11 -
 
 -r@-
 -: test  7 10 >r >r r@ r> r> . . . ; test-
--c[test] 10 7 7 -
+-10 7 7 -
 
 -dup-
 -2 dup .s-
@@ -88,7 +88,7 @@ test forth test assembler test
 
 -:-
 -: test 3 7 + . ; test-
--c[test] 10 -
+-10 -
 
 -not-
 -0 not .  -1 not .  7 not .  12 not .-
@@ -99,11 +99,11 @@ test forth test assembler test
 : xxx 1 . ; immediate
 : yyy xxx 2 . ;
 -
--c[xxx] c[yyy] 1 -
+-1 -
 
 -;-
 -: test 1 2 + . ; 3 4 + .-
--c[test] 7 -
+-7 -
 
 -,-
 -here 7 , @ .-
@@ -123,7 +123,7 @@ test forth test assembler test
 
 -does>-
 -: xxx create 10 , does> @ . ; xxx yyy yyy-
--c[xxx] n[yyy] 10 -
+-10 -
 
 -nop-
 -1 2 nop + .-
@@ -131,15 +131,15 @@ test forth test assembler test
 
 -create-
 -create xxx 8 , 7 c, xxx @ . xxx 2 + c@ .-
--n[xxx] 8 7 -
+-8 7 -
 
 -variable-
 -variable xxx 10 xxx ! xxx @ .-
--n[xxx] 10 -
+-10 -
 
 -constant-
 -17 constant xxx xxx .-
--n[xxx] 17 -
+-17 -
 
 -'-
 -1 2 ' + execute .-
@@ -151,11 +151,11 @@ test forth test assembler test
 
 -branch-
 -: xxx branch [ here 20 + ] literal 1 2 + . 3 7 + . ; xxx-
--c[xxx] 10 -
+-10 -
 
 -compile-
 -: xxx compile + ; immediate : yyy 1 2 xxx . ; yyy-
--c[xxx] c[yyy] 3 -
+-3 -
 
 ->mark-
 -here dup >mark swap - . here swap - .-
@@ -167,19 +167,19 @@ test forth test assembler test
 
 -?branch-
 -: xxx ?branch [ here 20 + ] literal 1 2 + . 3 7 + . ; -1 xxx 0 xxx-
--c[xxx] 3 10 10 -
+-3 10 10 -
 
 -if-
 -: test if 1 . then 2 . ; 0 test -1 test-
--c[test] 2 1 2 -
+-2 1 2 -
 
 -then-
 -: test if 3 . then ; -1 test-
--c[test] 3 -
+-3 -
 
 -else-
 -: test if 1 . else 2 4 + . then ; 0 test -1 test-
--c[test] 6 1 -
+-6 1 -
 
 -<mark-
 -here <mark = .-
@@ -191,27 +191,27 @@ test forth test assembler test
 
 -do-
 -: xxx 5 0 do i . loop ; xxx-
--c[xxx] 0 1 2 3 4 -
+-0 1 2 3 4 -
 
 -+loop-
 -: xxx -2 5 do i . -2 +loop ; xxx-
--c[xxx] 5 3 1 -
+-5 3 1 -
 
 -literal-
 -8 : xxx literal . ; xxx-
--c[xxx] 8 -
+-8 -
 
 -loop-
 -: xxx 0 3 0 do i + loop . ; xxx-
--c[xxx] 3 -
+-3 -
 
 -i-
 -: xxx 2 0 do i . 1 +loop ; xxx-
--c[xxx] 0 1 -
+-0 1 -
 
 -j-
 -: xxx 3 0 do 3 0 do j . i . loop loop ; xxx-
--c[xxx] 0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 -
+-0 0 0 1 0 2 1 0 1 1 1 2 2 0 2 1 2 2 -
 
 -*/-
 -40000 2 * 2 / u.  40000 2 2 */ u.-
@@ -386,11 +386,11 @@ pad c@ . pad 1+ c@ . pad 2+ c@ . pad 3 + c@ . pad 4 + c@ . pad 5 + c@ .
 
 -begin-
 -: xxx 0 begin dup . 1+ dup 7 = not until ; xxx-
--c[xxx] 0 1 2 3 4 5 6 -
+-0 1 2 3 4 5 6 -
 
 -until-
 -: xxx 48 begin dup emit 1+ dup 59 = not until ; xxx-
--c[xxx] 0123456789:-
+-0123456789:-
 
 -2!-
 -here 2 allot 7 over 5 swap 2! dup @ . 2+ @ .-
@@ -414,11 +414,11 @@ pad c@ . pad 1+ c@ . pad 2+ c@ . pad 3 + c@ . pad 4 + c@ . pad 5 + c@ .
 
 -inc-var-
 -variable xxx 0 xxx ! xxx inc-var xxx inc-var xxx @ .-
--n[xxx] 2 -
+-2 -
 
 -leave-
 -: xxx 5 0 do 5 0 do i 2 = if leave then i . loop i 3 = if leave then 1 +loop ; xxx-
--c[xxx] 0 1 0 1 0 1 0 1 -
+-0 1 0 1 0 1 0 1 -
 
 -#tib-
 -123 #tib @ .-
@@ -438,7 +438,7 @@ pad c@ . pad 1+ c@ . pad 2+ c@ . pad 3 + c@ . pad 4 + c@ . pad 5 + c@ .
 
 -rs-clear-
 -: xxx 2 . 1 rs-clear 3 . ; : yyy 1 . 1 xxx 4 . ; : zzz 5 . 1 yyy 8 . ; zzz .s-
--c[xxx] c[yyy] c[zzz] 5 1 2 <3> 1 1 1 -
+-5 1 2 <3> 1 1 1 -
 
 -ds-clear-
 -1 2 3 4 5 6 7 8 ds-clear .s-
@@ -446,11 +446,11 @@ pad c@ . pad 1+ c@ . pad 2+ c@ . pad 3 + c@ . pad 4 + c@ . pad 5 + c@ .
 
 -quit-
 -: xxx quit ; immediate : yyy xxx 1 2 + . -
--c[xxx] c[yyy] -
+--
 
 -abort-
 -: xxx 2 . 1 abort 3 . ; : yyy 1 . 1 xxx 4 . ; : zzz 5 . 1 yyy 8 . ; zzz .s-
--c[xxx] c[yyy] c[zzz] 5 1 2 -
+-5 1 2 -
 
 -blk-
 -s" blk c@ ." 45 block swap cmove 45 load-
@@ -474,7 +474,7 @@ pad c@ . pad 1+ c@ . pad 2+ c@ . pad 3 + c@ . pad 4 + c@ . pad 5 + c@ .
 
 -input-next-char-
 -input-next-char 8 drop . c@ . : xxx input-next-char . ; xxx-
---1 56 c[xxx] 0 -
+--1 56 0 -
 
 -skip-char-
 -char x skip-char xxxxxxxxxxxxxx8 . char y skip-char 8 .s-
@@ -482,11 +482,11 @@ pad c@ . pad 1+ c@ . pad 2+ c@ . pad 3 + c@ . pad 4 + c@ . pad 5 + c@ .
 
 -wait-char-
 -char x wait-char this is skipx 1 2 + .s : xxx [char] y wait-char .s ; xxx-
--<2> 120 3 c[xxx] <3> 120 3 0 -
+-<2> 120 3 <3> 120 3 0 -
 
 -word-
 -char x word xxxxxabcdx1 2 + . count type : xxx [char] y word count 0= . pad 1+ = . ; xxx-
--3 abcdc[xxx] -1 -1 -
+-3 abcd-1 -1 -
 
 -*/mod-
 -31723 122 143 */mod u. u.-
@@ -506,11 +506,11 @@ pad c@ . pad 1+ c@ . pad 2+ c@ . pad 3 + c@ . pad 4 + c@ . pad 5 + c@ .
 
 -.(-
 -: xxx .( some text) 1 2 + . ; 1 . xxx-
--c[xxx] some text1 3 -
+-some text1 3 -
 
 -(-
 -: xxx ( this text is skiped) 1 2 + . ; xxx-
--c[xxx] 3 -
+-3 -
 
 -s"-
 -s" abcd" type-
@@ -526,39 +526,39 @@ s" abcd    " over swap -trailing . = .
 s"            " over swap -trailing . = .
 : xxx 32 word count over swap -trailing . = . ; xxx
 -
--4 -1 0 -1 c[xxx] 0 -1 -
+-4 -1 0 -1 0 -1 -
 
 -state-
 -state c@ . : xxx state c@ . ; immediate : yyy xxx ;-
--0 c[xxx] c[yyy] 1 -
+-0 1 -
 
 -[-
 -: xxx [ 7 . ] 8 . ; xxx-
--c[xxx] 7 8 -
+-7 8 -
 
 -]-
 -: xxx [ 1 2 + . ] ;-
--c[xxx] 3 -
+-3 -
 
 -[compile]-
 -: xxx 1 2 + . ; immediate : yyy [compile] xxx ; yyy-
--c[xxx] c[yyy] 3 -
+-3 -
 
 -[']-
 -: xxx ['] + 1 2 rot execute . ; xxx-
--c[xxx] 3 -
+-3 -
 
 -."-
 -: xxx ." some text " 1 2 + . ; xxx-
--c[xxx] some text 3 -
+-some text 3 -
 
 -while-
 -: xxx 0 begin dup . 1+ dup 5 = not while 1 . repeat ; xxx-
--c[xxx] 0 1 1 1 2 1 3 1 4 -
+-0 1 1 1 2 1 3 1 4 -
 
 -repeat-
 -: xxx begin 1 . 0 while 2 . repeat ; xxx-
--c[xxx] 1 -
+-1 -
 
 -vocabulary-
 -
@@ -569,11 +569,11 @@ yyy definitions : test 2 . ;
 xxx test
 yyy test
 -
--n[xxx] n[yyy] c[test] c[test] 1 2 -
+-1 2 -
 
 -abort"-
 -: xxx 1 2 + . abort" some error" 3 4 + . ; 0 xxx -1 xxx-
--%%c[xxx] 3 7 3 
+-%%3 7 3 
 Error: some error-
 
 -find-
@@ -586,7 +586,7 @@ xxx 34 word test" find . execute
 yyy 34 word test" find . execute
 34 word zzz" dup find . = .
 -
--n[xxx] n[yyy] c[test] c[test] -1 1 1 2 0 -1 -
+--1 1 1 2 0 -1 -
 
 -forget-
 -
@@ -601,15 +601,15 @@ yyy definitions forget test
 test xxx definitions forget test
 34 word test" find . drop
 -
--n[xxx] n[yyy] c[test] c[test] c[zzz] 3 2 1 0 1 0 -
+-3 2 1 0 1 0 -
 
 -2variable-
 -2variable xxx 1 2 xxx 2! xxx 2@ .s-
--n[xxx] <2> 1 2 -
+-<2> 1 2 -
 
 -2constant-
 -7 8 2constant xxx xxx .s-
--n[xxx] <2> 7 8 -
+-<2> 7 8 -
 
 -d0=-
 -1 0 d0= .  -1 -1 d0= .  0 0 d0= .-
@@ -665,7 +665,7 @@ test xxx definitions forget test
 
 -[char]-
 -: xxx [char] x . ; xxx-
--c[xxx] 120 -
+-120 -
 
 -d*-
 --1 0 -1 0 d* ud.-

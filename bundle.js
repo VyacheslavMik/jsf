@@ -29,6 +29,19 @@ window.onclick = () => {
     input.focus();
 }
 
+kernel.setExitFn((err) => {
+    output.parentNode.removeChild(output);
+    input.parentNode.removeChild(input);
+    let text;
+    if (err) {
+	text = err;
+    } else {
+	text = 'See you later!';
+    }
+    document.body.innerHTML += '<div id="leave"><div class="content"><span>'+ text +
+	'</span><button id="restart" onClick="window.location.reload()">Restart</button></div></div>';
+});
+
 kernel.run();
 
 },{"./kernel.js":2}],2:[function(require,module,exports){
@@ -56,6 +69,7 @@ let isPrintingOutput = false;
 
 let isOnPause = false;
 let isWaitingKey = false;
+let isSilent = false;
 
 let writeFn;
 let exitFn;
@@ -545,7 +559,10 @@ function writeOutput (outputBuffer) {
 }
 
 function printOutput () {
-    writeOutput(outputBuffer);
+    if (!isSilent) {
+	writeOutput(outputBuffer);
+    }
+    isSilent = false;
     outputBuffer = '';
 }
 
@@ -1087,7 +1104,6 @@ let name = env.readWord();
 if (name.trim() == '') {
     throw 'Empty string for name';
 }
-env.printValue('a[' + name + ']');
 env.memory[0] = 1;
 env.memory[1] = {
                   name: name,
@@ -1161,6 +1177,7 @@ function execute (str) {
 
 function run () {
     use('core.f');
+    isSilent = true;
     placeOnTib('1 load');    
 }
 

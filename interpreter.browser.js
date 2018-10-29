@@ -28,4 +28,17 @@ window.onclick = () => {
     input.focus();
 }
 
+kernel.setExitFn((err) => {
+    output.parentNode.removeChild(output);
+    input.parentNode.removeChild(input);
+    let text;
+    if (err) {
+	text = err;
+    } else {
+	text = 'See you later!';
+    }
+    document.body.innerHTML += '<div id="leave"><div class="content"><span>'+ text +
+	'</span><button id="restart" onClick="window.location.reload()">Restart</button></div></div>';
+});
+
 kernel.run();

@@ -163,7 +163,6 @@ end-code
 code :                                                         
   let name = env.readWord();                                   
   if (name.trim() == '') throw 'Empty string for name';        
-  env.printValue('c[' + name + ']');                           
   env.memory[0] = 1;                                           
   env.memory[2] = 1;                                           
   env.entry(name);                                             
@@ -172,6 +171,7 @@ end-code
 code not                                                       
   env.dsPush(~env.dsPop());                                    
 end-code                                                       
+                                                               
                                                                
                                                                
 \ words: immediate ;                                           
@@ -226,7 +226,6 @@ end-code
                                                                
 code create                                                    
   let name = env.readWord();                                   
-  env.printValue('n[' + name + ']');                           
   if (name.trim() == '') { throw 'Empty string for name'; }    
   let nopAddr = env.findWord('nop');                           
   let nop_caddr = env.toBody(nopAddr);                         
@@ -237,6 +236,7 @@ code create
   env.memWriteNextCell(2); env.memWriteNextCell(nop_caddr);    
   env.memWriteNextCell(2); env.memWriteNextCell(exit_caddr);   
 end-code                                                       
+                                                               
                                                                
 \ words: variable constant ' execute                           
                                                                
@@ -680,9 +680,9 @@ variable <#addr#>
 : d.r  >r tuck dabs <# #s rot sign #>  dup r> swap - dup 0 < if
    abort" Not enough space" else spaces type space then  ;     
                                                                
-: x abort" some error" ;                                       
-: y x ;                                                        
-: z y ;                                                        
+                                                               
+                                                               
+                                                               
                                                                
                                                                
                                                                
