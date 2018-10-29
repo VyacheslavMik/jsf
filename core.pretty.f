@@ -577,13 +577,13 @@ pad count + vocab definitions vocabulary assembler
 \ words: abort" (abort") find forget 2variable 2constant d0=   
 \ 2swap 2over 2rot                                             
 forth definitions                                              
-: (abort")  if r> count type abort else r> count + >r then ;   
+code throw  env.throwError(); end-code                         
+                                                               
+: (abort")  if r> dup >r throw else r> count + >r then ;       
 : abort"  compile (abort") 34 word count  dup c,  here swap    
    dup allot cmove> ; immediate                                
-                                                               
 code find  env.find();  end-code                               
 code forget  env.forget();  end-code                           
-                                                               
 : 2variable  create 0 , 0 ,  ;                                 
 : 2constant  create , ,  does>  2@  ;                          
 : d0=  0= swap 0= and  ;                                       
@@ -680,9 +680,9 @@ variable <#addr#>
 : d.r  >r tuck dabs <# #s rot sign #>  dup r> swap - dup 0 < if
    abort" Not enough space" else spaces type space then  ;     
                                                                
-                                                               
-                                                               
-                                                               
+: x abort" some error" ;                                       
+: y x ;                                                        
+: z y ;                                                        
                                                                
                                                                
                                                                

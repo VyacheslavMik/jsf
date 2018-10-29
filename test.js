@@ -39,7 +39,9 @@ function runTest (desc, str, expected) {
 	let fn = function () {
 	    if (kernel.isOnPause()) {
 		kernel.setWriteFn((actual) => {
-		    if (actual == expected + ' ok\n') {
+		    if (expected.startsWith('%%') && actual.startsWith(expected.substring(2))) {
+			console.log('Passed "' + desc + '"');
+		    } else if (actual == expected + ' ok\n') {
 			console.log('Passed "' + desc + '"');
 		    } else {
 			failed[failed.length] = { desc: desc, str: str, actual: actual.trim('\n') };
@@ -62,6 +64,7 @@ async function runTests () {
     	let test = tests[i];
     	await runTest(test.desc, test.str, test.expected);
     }
+
     console.log();
     console.log();
     console.log("Failed tests");

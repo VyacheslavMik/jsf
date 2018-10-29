@@ -106,24 +106,27 @@ function writeStackDCell (arr, addr, value) {
 }
 
 function stackPopDCell (stack) {
-    if (stack.p <= 3)
+    if (stack.p <= 3) {
 	throw stack.desc + " is underflow";
+    }
     let value = readStackDCell(stack.arr, stack.p - 4);
     stack.p -= 4;
     return value;
 }
 
 function stackPopDCellNum (stack) {
-    if (stack.p <= 3)
+    if (stack.p <= 3) {
 	throw stack.desc + " is underflow";
+    }
     let value = readStackDCellNum(stack.arr, stack.p - 4);
     stack.p -= 4;
     return value;
 }
 
 function stackPushDCell (stack, value) {
-    if (stack.p + 4 >= stack.limit)
+    if (stack.p + 4 >= stack.limit) {
 	throw stack.desc + " is overflow";
+    }
     writeStackDCell(stack.arr, stack.p, value)
     stack.p += 4;
 }
@@ -131,24 +134,27 @@ function stackPushDCell (stack, value) {
 // ------- end double numbers ---------- 
 
 function stackPopCell (stack) {
-    if (stack.p <= 1)
+    if (stack.p <= 1) {
 	throw stack.desc + " is underflow";
+    }
     let value = readCell(stack.arr, stack.p - 2);
     stack.p -= 2;
     return value;
 }
 
 function stackPopNum (stack) {
-    if (stack.p <= 1)
+    if (stack.p <= 1) {
 	throw stack.desc + " is underflow";
+    }
     let value = readCellNum(stack.arr, stack.p - 2);
     stack.p -= 2;
     return value;
 }
 
 function stackPeekCell (stack) {
-    if (stack.p <= 1)
+    if (stack.p <= 1) {
 	throw stack.desc + " is underflow";
+    }
     return readCell(stack.arr, stack.p - 2);
 }
 
@@ -169,6 +175,16 @@ function readString (arr, addr) {
     return value;
 }
 
+function throwError () {
+    let addr = dsPop();
+    let count = readByte(memory, addr);
+    let value = '';
+    for (let i = 0; i < count; i++) {
+	value += String.fromCharCode(readByte(memory, addr + i + 1));
+    }
+    throw value;
+}
+
 function writeString (arr, addr, value) {
     writeCell(arr, addr, value.length);
     addr += 2;
@@ -183,15 +199,17 @@ let ds           = { arr: [], p: 0, desc: "Data stack", limit: 1024 };
 let rs           = { arr: [], p: 0, desc: "Return stack", limit: 1024 };
 
 function pushJsFunction (value) {
-    if (functions.p == 1024)
+    if (functions.p == 1024) {
 	throw "Assembler vocabulary is overflow";
+    }
     functions.arr[functions.p] = value;
     functions.p++;
 }
 
 function peekJsFunction (addr) {
-    if (addr > functions.p && addr < 0)
+    if (addr > functions.p && addr < 0) {
 	throw "Assembler peek is out of range";
+    }
     return functions.arr[addr];
 }
 
@@ -376,7 +394,9 @@ function bufferUpdate () {
 function block () {
     let u = dsPop();
 
-    if (u == 0) throw '0 block is denied';
+    if (u == 0) {
+	throw '0 block is denied';
+    }
     
     let blk = readByte(memory, bufferBlockPos);
 
@@ -420,14 +440,56 @@ function findWord (name) {
 	let wordAddr = vocabularies[i].word;
 	while (wordAddr > 0) {
 	    let wordNameAddr = wordAddr + 1 + 2;
-	    let word_name = readString(memory, wordNameAddr);
-	    if (name == word_name) {
+	    let wordName = readString(memory, wordNameAddr);
+	    if (name == wordName) {
 		return wordAddr;
 	    } else {
 		wordAddr = readCell(memory, wordAddr + 1);
 	    }
 	}
     }
+}
+
+function abortPrintStack () {
+    if (rs.p > 0) {
+	printLast('Backtrace:');
+    }
+    let words = [];
+    for (var i = 0; i < vocabularies.length; i++) {
+	let addr = vocabularies[i].word;
+	while (addr > 0) {
+	    words[addr] = true;
+	    addr = readCell(memory, addr + 1);
+	}
+    }
+    while (rs.p > 0) {
+	let xt = rsPop();
+	let addr = xt;
+	while (addr > 0) {
+	    if (words[addr]) {
+		let name = readString(memory, addr + 1 + 2);
+		printLast(xt + ' ' + name);
+		break;
+	    }
+	    addr--;
+	}
+    }
+}
+
+function abort (err) {
+    printLast('');
+    if (err) {
+	printLast('Error: ' + err);
+    }
+    abortPrintStack();
+    printOutput();
+    writeCell(memory, numberTibPos, 0);
+    writeCell(memory, toInPos,  0);
+    writeByte(memory, blockNumberPos, 0);
+    writeByte(memory, 0, 0);
+    ds.p = 0;
+    rs.p = 0;
+    isOnPause = true;
 }
 
 function printValue (v) {
@@ -462,8 +524,12 @@ function resume() {
     isOnPause = false;
     isWaitingKey = false;
 
-    addressInterpreter();
-    textInterpreter();
+    try {
+	addressInterpreter();
+	textInterpreter();
+    } catch (err) {
+	abort(err);
+    }
 }
 
 function waitKey() {
@@ -471,9 +537,9 @@ function waitKey() {
     isWaitingKey = true;
 }
 
-function exit() {
+function exit(err) {
     if (exitFn != undefined) {
-	exitFn();
+	exitFn(err);
     }
 }
 
@@ -583,7 +649,7 @@ function forget () {
 	}
     }
     if (wordAddr == 0) {
-	throw 'Word not found';
+	throw 'Word not found: ' + word;
     }
     for (let i = 0; i < vocabularies.length; i++) {
 	pruneVocabulary(wordAddr, vocabularies[i]);
@@ -627,6 +693,8 @@ let env = {memory:                memory,
 	   memReadString:         memReadString,
 
 	   toBody:                toBody,
+	   abort:                 abort,
+	   throwError:            throwError,
 
 	   dsPop:                 dsPop,
 	   dsPush:                dsPush,
@@ -659,26 +727,34 @@ function jsEntry (name, code) {
 }
 
 function addressInterpreter () {
-    while (rs.p > 0) {
-	if (isOnPause) break;
+    let codeAddr = 0;
+    try {
+	while (rs.p > 0) {
+	    if (isOnPause) break;
 
-	let codeAddr = rsPop();
-	let code = readCell(memory, codeAddr);
-	if (code == 1) {
-	    let jsPointer = readCell(memory, codeAddr + 2);
-	    let fn = peekJsFunction(jsPointer);
-	    fn(env);
-	} else if (code == 2) {
-	    let code_pointer = readCell(memory, codeAddr + 2);
-	    rsPush(codeAddr + 4);
-	    rsPush(code_pointer);
-	} else if (code == 3) {
-	    let integer = readCell(memory, codeAddr + 2);
-	    rsPush(codeAddr + 4);
-	    dsPush(integer);
-	} else {
-	    throw 'Unabled to process code: ' + code;
+	    codeAddr = rsPop();
+	    let code = readCell(memory, codeAddr);
+	    if (code == 1) {
+		let jsPointer = readCell(memory, codeAddr + 2);
+		let fn = peekJsFunction(jsPointer);
+		fn(env);
+	    } else if (code == 2) {
+		let codePointer = readCell(memory, codeAddr + 2);
+		rsPush(codeAddr + 4);
+		rsPush(codePointer);
+	    } else if (code == 3) {
+		let integer = readCell(memory, codeAddr + 2);
+		rsPush(codeAddr + 4);
+		dsPush(integer);
+	    } else {
+		throw 'Unabled to process code: ' + code;
+	    }
 	}
+    } catch (err) {
+	if (codeAddr > 0) {
+	    rsPush(codeAddr);
+	}
+	throw err;
     }
 }
 
@@ -781,8 +857,8 @@ function dump () {
 	let wordAddr = vocabularies[idx].word;
 	while (wordAddr > 0) {
 	    let wordNameAddr = wordAddr + 1 + 2;
-	    let word_name = readString(memory, wordNameAddr);
-	    output += word_name + ' ';
+	    let wordName = readString(memory, wordNameAddr);
+	    output += wordName + ' ';
 	    wordAddr = readCell(memory, wordAddr + 1);
 	}
 
@@ -805,7 +881,8 @@ function use (name) {
 
     readFile(name, function (err, content) {
 	if (err) {
-	    throw err; 
+	    abort(err);
+	    return;
 	}
 	fileName = name;
 	let count = Math.ceil(content.length / 1024);
@@ -842,7 +919,10 @@ function saveFile () {
     }
     pause();
     writeFile(output, function(err) {
-	if(err) { throw err; }
+	if(err) {
+	    abort(err);
+	    return;
+	}
 	resume();
     }); 
 }
@@ -862,88 +942,77 @@ function parseInteger (str) {
 function textInterpreter () {
     let message = 'ok';
     let word = readWord();
-    try {
-	while (!isOnPause && word != '') {
-	    let wordAddr = findWord(word);
-	    if (wordAddr != undefined && isImmediate(wordAddr) && memory[1] == 0) {
-		rsPush(toBody(wordAddr));
-		addressInterpreter();
+    while (!isOnPause && word != '') {
+	let wordAddr = findWord(word);
+	if (wordAddr != undefined && isImmediate(wordAddr) && memory[1] == 0) {
+	    rsPush(toBody(wordAddr));
+	    addressInterpreter();
+	    message = 'ok';
+	} else if (memory[0] == 0) {
+	    if (word == 'bye') {
+		exit();
+		break;
+	    } else if (word == 'dump') {
+		dump();
 		message = 'ok';
-	    } else if (memory[0] == 0) {
-		if (word == 'bye') {
-		    exit();
-		    break;
-		} else if (word == 'dump') {
-		    dump();
-		    message = 'ok';
-		} else if (word != '') {
-		    let wordAddr = findWord(word);
-		    if (wordAddr == undefined) {
-			let integer = parseInteger(word);
-			if (integer == undefined) {
-			    throw 'Word is not found: ' + word;
-			} else {
-			    dsPush(integer);
-			}
+	    } else if (word != '') {
+		let wordAddr = findWord(word);
+		if (wordAddr == undefined) {
+		    let integer = parseInteger(word);
+		    if (integer == undefined) {
+			throw 'Word is not found: ' + word;
 		    } else {
-			rsPush(toBody(wordAddr));
-			addressInterpreter();
-			message = 'ok';
+			dsPush(integer);
 		    }
 		} else {
+		    rsPush(toBody(wordAddr));
+		    addressInterpreter();
 		    message = 'ok';
 		}
 	    } else {
-		if (memory[1] != 0) {
-		    let wordAddr = findWord(word);
-		    if (word != 'end-code') {
-			memory[1].code += ' ' + word;
-			message = 'compiled';
+		message = 'ok';
+	    }
+	} else {
+	    if (memory[1] != 0) {
+		let wordAddr = findWord(word);
+		if (word != 'end-code') {
+		    memory[1].code += ' ' + word;
+		    message = 'compiled';
+		} else {
+		    rsPush(toBody(wordAddr));
+		    addressInterpreter();
+		    message = 'ok';
+		}
+	    } else if (memory[2] != 0) {
+		let wordAddr = findWord(word);
+		if (wordAddr == undefined) {
+		    let integer = parseInteger(word);
+		    if (integer == undefined) {
+			throw 'Word is not found: ' + word;
 		    } else {
-			rsPush(toBody(wordAddr));
-			addressInterpreter();
-			message = 'ok';
-		    }
-		} else if (memory[2] != 0) {
-		    let wordAddr = findWord(word);
-		    if (wordAddr == undefined) {
-			let integer = parseInteger(word);
-			if (integer == undefined) {
-			    throw 'Word is not found: ' + word;
-			} else {
-			    memWriteNextCell(3);
-			    memWriteNextCell(integer);
-			    message = 'compiled';
-			}
-		    } else {
-			memWriteNextCell(2);
-			memWriteNextCell(toBody(wordAddr));
+			memWriteNextCell(3);
+			memWriteNextCell(integer);
 			message = 'compiled';
 		    }
 		} else {
-		    throw 'What is compiling?!';
+		    memWriteNextCell(2);
+		    memWriteNextCell(toBody(wordAddr));
+		    message = 'compiled';
 		}
-	    }
-	    if (!isOnPause) {
-		word = readWord();
+	    } else {
+		throw 'What is compiling?!';
 	    }
 	}
-
 	if (!isOnPause) {
-	    printLast(' ' + message);
-	    pause();
-	    writeCell(memory, toInPos, 0);
-	    writeCell(memory, numberTibPos, 0);
+	    word = readWord();
 	}
-    } catch (err) {
-	printOutput();
-	console.log('Error: ' + err);
+    }
+
+    if (!isOnPause) {
+	printLast(' ' + message);
+	pause();
+	writeCell(memory, toInPos, 0);
 	writeCell(memory, numberTibPos, 0);
-	writeCell(memory, toInPos,  0);
-	writeByte(memory, blockNumberPos, 0);
-	writeByte(memory, 0, 0);
-	ds.p = 0;
-	rs.p = 0;
     }
 }
 
@@ -982,7 +1051,7 @@ vocabulary("assembler"); definitions();
 jsEntry("code", `
 let name = env.readWord();
 if (name.trim() == '') {
-    throw 'Empty string for name' ;
+    throw 'Empty string for name';
 }
 env.printValue('a[' + name + ']');
 env.memory[0] = 1;
@@ -1033,8 +1102,6 @@ function backslash () {
 jsEntry('\\', `env.backslash();`);
 jsEntry('load', `env.load();`);
 
-//use('core.f');
-
 outputBuffer =
     'Welcome to forth interpreter prototype\n' +
     'Type \'bye\' to exit\n\n';
@@ -1052,8 +1119,6 @@ function placeOnTib(str) {
     }
     writeCell(memory, numberTibPos, arr.length - 2);
 }
-
-//placeOnTib('1 load');
 
 function execute (str) {
     placeOnTib(str);

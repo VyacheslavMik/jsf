@@ -573,7 +573,8 @@ yyy test
 
 -abort"-
 -: xxx 1 2 + . abort" some error" 3 4 + . ; 0 xxx -1 xxx-
--c[xxx] 3 7 3 some error-
+-%%c[xxx] 3 7 3 
+Error: some error-
 
 -find-
 -
@@ -739,6 +740,5 @@ test xxx definitions forget test
 
 -d.r-
 -10 0 7 d.r  100 0 1 d.r-
--     10 Not enough space-
-
-end
+-%%     10 
+Error: Not enough space-
