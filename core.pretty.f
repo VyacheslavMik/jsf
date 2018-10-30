@@ -125,7 +125,7 @@ code =
   env.dsPush(a == b, 'b');                                     
 end-code                                                       
                                                                
-                                                               
+code um*  env.dsPush(env.dsPop() * env.dsPop(), 'd');  end-code
 \ words: : not                                                 
                                                                
 code :                                                         
@@ -304,10 +304,6 @@ end-code
                                                                
 \ words: min mod negate roll rot                               
                                                                
-                                                               
-                                                               
-                                                               
-                                                               
 code roll                                                      
   let n = env.dsPop() + 1;                                     
   let v = env.readCell(env.ds.arr, env.ds.p - 2 * n);          
@@ -318,6 +314,10 @@ code roll
 end-code                                                       
                                                                
 : rot   2 roll ;                                               
+                                                               
+                                                               
+                                                               
+                                                               
 \ words: u< um*                                                
                                                                
 code u<                                                        
@@ -326,16 +326,6 @@ code u<
   env.dsPush(u1 < u2, 'b');                                    
 end-code                                                       
                                                                
-code um*                                                       
-  let u2 = env.dsPop();                                        
-  let u1 = env.dsPop();                                        
-  env.dsPush(u1 * u2, 'd');                                    
-end-code                                                       
-                                                               
-                                                               
-                                                               
-\ word: um/mod                                                 
-                                                               
 code um/mod                                                    
   let u1 = env.dsPop();                                        
   let ud = env.dsPop('ud');                                    
@@ -343,6 +333,16 @@ code um/mod
   env.dsPush(ud - u1 * u3);                                    
   env.dsPush(u3);                                              
 end-code                                                       
+                                                               
+\ word: um/mod                                                 
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
                                                                
                                                                
                                                                
