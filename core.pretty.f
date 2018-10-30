@@ -44,8 +44,8 @@ code c@
   env.dsPush(val);                                             
 end-code                                                       
                                                                
-                                                               
-                                                               
+code dup   env.dsPush(env.dsPeek());  end-code                 
+code drop  env.dsPop();               end-code                 
 \ words: c@ c!                                                 
                                                                
 code c!                                                        
@@ -97,20 +97,10 @@ end-code
 \ words: >r r>                                                 
                                                                
 code r>                                                        
-  let next_word = env.rsPop();                                 
+  let nextWord = env.rsPop();                                  
   env.dsPush(env.rsPop());                                     
-  env.rsPush(next_word);                                       
+  env.rsPush(nextWord);                                        
 end-code                                                       
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-\ words: r@ dup drop                                           
                                                                
 code r@                                                        
   let top = env.rsPop();                                       
@@ -118,13 +108,7 @@ code r@
   env.rsPush(top);                                             
 end-code                                                       
                                                                
-code dup                                                       
-  env.dsPush(env.dsPeek());                                    
-end-code                                                       
                                                                
-code drop                                                      
-  env.dsPop();                                                 
-end-code                                                       
                                                                
 \ words: swap =                                                
                                                                
