@@ -286,22 +286,6 @@ end-code
                                                                
                                                                
                                                                
-\ words: ?dup abs and or                                       
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
 \ words: cmove cmove> count depth fill max                     
                                                                
 : cmove   dup 0= if drop drop drop else                        
