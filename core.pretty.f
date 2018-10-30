@@ -237,7 +237,7 @@ code */
   env.dsPush(Math.floor((n1*n2)/n3));                          
 end-code                                                       
                                                                
-                                                               
+code >in   env.dsPush(env.toInPos); end-code                   
 \ words: .s pick over +!                                       
                                                                
 code pick                                                      
@@ -366,33 +366,17 @@ variable span
 : expect   0 span !  dup 0= if drop drop else                  
    0 do  key  dup 13 = if  space leave  else                   
    dup emit  over i + c!  1 span +!  then  loop  drop  then ;  
-\ words: leave expect #tib                                     
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
 \ words: >in >body rs-clear ds-clear quit abort blk pad tib    
 \       forth-83                                               
-code >in   env.dsPush(env.toInPos); end-code                   
+code blk        env.dsPush(env.blockNumberPos); end-code       
+code tib        env.dsPush(env.tibPos);         end-code       
+code rs-clear   env.rs.p = 0;                   end-code       
+code ds-clear   env.ds.p = 0;                   end-code       
+                                                               
 : >body  ; : forth-83  ;                                       
-code rs-clear   env.rs.p = 0;  end-code                        
-code ds-clear   env.ds.p = 0;  end-code                        
-: quit   0 #tib !  0 >in !  0 0 !  rs-clear  ;                 
-: abort   ds-clear  quit  ;                                    
-code blk  env.dsPush(env.blockNumberPos); end-code             
-: pad   256 here +  ;                                          
-code tib  env.dsPush(env.tibPos);  end-code                    
+: quit           0 #tib !  0 >in !  0 0 !  rs-clear      ;     
+: abort          ds-clear  quit                          ;     
+: pad            256 here +                              ;     
 : input-stream   blk c@ dup  if block else drop tib then ;     
 : input-limit   blk c@ dup if block 1024 else drop #tib @ tib  
    then +  ;                                                   
