@@ -427,23 +427,23 @@ code dnegate  env.dsPush(-env.dsPop('d'), 'd');  end-code
 : .(   41 word count type  ; immediate                         
 :  (   41 word drop        ; immediate                         
                                                                
-                                                               
-                                                               
-                                                               
+: state    0             ;                                     
+: space?   c@ 32 =       ;                                     
+: s"       34 word count ;                                     
 \ words: s" space? -trailing state [ ] [compile] ['] (.") ."   
                                                                
-: s"   34 word count ;                                         
-: space?  ( addr -- flag)  c@ 32 =  ;                          
 : -trailing   dup 0= not if dup 0 do  over over + 1 -          
    space?  if  1 -  else  leave  then  loop  then  ;           
-: state  0  ;                                                  
-: [  0 state c!  ;  immediate                                  
-: ]  1 state c!  ;                                             
-: [compile]  2 , ' , ; immediate                               
-: [']  ' [compile] literal  ; immediate                        
+                                                               
+: [          0 state c!           ;  immediate                 
+: ]          1 state c!           ;                            
+: [compile]  2 , ' ,              ; immediate                  
+: [']        ' [compile] literal  ; immediate                  
+                                                               
 : (.")  r> count  2dup + >r  type ;                            
 : ."   compile (.") 34 word count  dup c,  here swap           
    dup allot cmove> ; immediate                                
+                                                               
 : while   compile ?branch  >mark  ; immediate                  
 : repeat  swap <resolve >resolve  ; immediate                  
 \ words: vocab vocabulary vocabulary-name vocabulary-name!     
