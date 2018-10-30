@@ -189,7 +189,7 @@ end-code
                                                                
 : execute   >r  ;                                              
                                                                
-                                                               
+code key  env.waitKey();  end-code                             
 \ words: compile >mark >resolve ?branch branch                 
                                                                
 : branch     r> 2 + @ >r                    ;                  
@@ -205,7 +205,7 @@ code ?branch
   env.rsPush(addr);                                            
 end-code                                                       
                                                                
-                                                               
+code #tib  env.dsPush(env.numberTibPos);  end-code             
 \ words: if then else <mark <resolve do +loop                  
                                                                
 : if     compile ?branch >mark              ; immediate        
@@ -342,45 +342,45 @@ code xor
   env.dsPush(w1 ^ w2);                                         
 end-code                                                       
                                                                
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
+: allot   0 do 0 c, loop                       ;               
+: begin   <mark                                ; immediate     
+: until   compile not compile ?branch <resolve ; immediate     
+: 2!      dup >r  ! r> 2 + !                   ;               
+: 2@      dup 2 + @  swap @                    ;               
+: 2drop   drop drop                            ;               
+: d=      rot = >r = r> and                    ;               
+: 2dup    over over                            ;               
 \ words: key type allot begin until 2! 2@ 2drop d= 2dup        
-                                                               
-code key                                                       
-  env.waitKey();                                               
-end-code                                                       
                                                                
 : type   dup if  0 do  dup i + c@ emit  loop  else  drop  then 
    drop ;                                                      
-: allot   0 do 0 c, loop ;                                     
-: begin   <mark  ; immediate                                   
-: until   compile not compile ?branch <resolve ; immediate     
-: 2!   dup >r  ! r> 2 + ! ;                                    
-: 2@   dup 2 + @  swap @  ;                                    
-: 2drop  drop drop  ;                                          
-: d=   rot = >r = r> and  ;                                    
-: 2dup   over over  ;                                          
-\ words: leave expect #tib                                     
-                                                               
 : inc-var   1 over +! @ ;                                      
 variable (+loop)-xt  ' (+loop) (+loop)-xt !                    
 variable (leave-i)                                             
+variable span                                                  
+                                                               
 : leave   (+loop)-xt @ 2  r@ (leave-i) !                       
    begin  2dup (leave-i) inc-var 2@  d= not  until             
    2drop (leave-i) @ 12 + r> r> r> 2drop drop  >r  ;           
-variable span                                                  
+                                                               
 : expect   0 span !  dup 0= if drop drop else                  
    0 do  key  dup 13 = if  space leave  else                   
    dup emit  over i + c!  1 span +!  then  loop  drop  then ;  
-code #tib                                                      
-   env.dsPush(env.numberTibPos);                               
-end-code                                                       
+\ words: leave expect #tib                                     
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
                                                                
 \ words: >in >body rs-clear ds-clear quit abort blk pad tib    
 \       forth-83                                               
