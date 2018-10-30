@@ -92,7 +92,7 @@ code >r
   env.rsPush(nextWord);                                        
 end-code                                                       
                                                                
-                                                               
+code .s  env.printStack(env.ds);  end-code                     
                                                                
 \ words: >r r>                                                 
                                                                
@@ -108,8 +108,8 @@ code r@
   env.rsPush(top);                                             
 end-code                                                       
                                                                
-                                                               
-                                                               
+code and  env.dsPush(env.dsPop() & env.dsPop());  end-code     
+code or   env.dsPush(env.dsPop() | env.dsPop());  end-code     
 \ words: swap =                                                
                                                                
 code swap                                                      
@@ -176,8 +176,8 @@ code create
 end-code                                                       
 \ words: variable constant ' execute                           
                                                                
-: variable   create  0 ,  does>  ;                             
-: constant   create  ,  does>  @  ;                            
+: variable   create  0 ,  does>     ;                          
+: constant   create    ,  does>  @  ;                          
                                                                
 code '                                                         
   let word = env.readWord();                                   
@@ -192,10 +192,10 @@ end-code
                                                                
 \ words: compile >mark >resolve ?branch branch                 
                                                                
-: branch   r> 2 + @ >r ;                                       
-: compile   2 ,  r>  dup 2 + @  ,  4 + >r  ;                   
-: >mark   2 ,  here  0 ,  ;                                    
-: >resolve   here swap !  ;                                    
+: branch     r> 2 + @ >r                    ;                  
+: compile    2 ,  r>  dup 2 + @  ,  4 + >r  ;                  
+: >mark      2 ,  here  0 ,                 ;                  
+: >resolve   here swap !                    ;                  
                                                                
 code ?branch                                                   
   let f = env.dsPop();                                         
@@ -208,11 +208,11 @@ end-code
                                                                
 \ words: if then else <mark <resolve do +loop                  
                                                                
-: if   compile ?branch >mark ; immediate                       
-: then   >resolve  ; immediate                                 
+: if     compile ?branch >mark              ; immediate        
+: then   >resolve                           ; immediate        
 : else   compile branch >mark swap >resolve ; immediate        
                                                                
-: <mark   here  ;                                              
+: <mark     here    ;                                          
 : <resolve  2 ,  ,  ;                                          
                                                                
 : do   compile >r  compile >r  <mark  ; immediate              
@@ -240,20 +240,20 @@ end-code
                                                                
 \ words: .s pick over +!                                       
                                                                
-code .s                                                        
-  env.printStack(env.ds);                                      
-end-code                                                       
-                                                               
 code pick                                                      
   let a = env.dsPop();                                         
   let b = env.readCell(env.ds.arr, env.ds.p - (a + 1) * 2);    
   env.dsPush(b);                                               
 end-code                                                       
                                                                
-: over   1 pick ;                                              
-: +!   swap over @  + swap ! ;                                 
+: over   1 pick                 ;                              
+: +!     swap over @  + swap !  ;                              
                                                                
-                                                               
+code <                                                         
+  let n2 = env.dsPop('n');                                     
+  let n1 = env.dsPop('n');                                     
+  env.dsPush(n1 < n2, 'b');                                    
+end-code                                                       
 \ words: /mod <                                                
                                                                
 code /mod                                                      
@@ -264,19 +264,13 @@ code /mod
   env.dsPush(n4);                                              
 end-code                                                       
                                                                
-code <                                                         
-  let n2 = env.dsPop('n');                                     
-  let n1 = env.dsPop('n');                                     
-  env.dsPush(n1 < n2, 'b');                                    
-end-code                                                       
-                                                               
-\ words: > 0< 0> 1+ 1- 2+ 2- 2/                                
-                                                               
 code >                                                         
   let n2 = env.dsPop('n');                                     
   let n1 = env.dsPop('n');                                     
   env.dsPush(n1 > n2, 'b');                                    
 end-code                                                       
+                                                               
+\ words: > 0< 0> 1+ 1- 2+ 2- 2/                                
                                                                
 : 0<   0 <  ;                                                  
 : 0>   0 >  ;                                                  
@@ -286,22 +280,28 @@ end-code
 : 2-   2 -  ;                                                  
 : 2/   2 /  ;                                                  
                                                                
+: ?dup   dup 0= not  if dup then  ;                            
+: abs    dup 0< if -1 * then      ;                            
+                                                               
+                                                               
+                                                               
+                                                               
 \ words: ?dup abs and or                                       
                                                                
-: ?dup   dup 0= not  if dup then  ;                            
-: abs   dup 0< if -1 * then ;                                  
                                                                
-code and                                                       
-  let a = env.dsPop();                                         
-  let b = env.dsPop();                                         
-  env.dsPush(a & b);                                           
-end-code                                                       
                                                                
-code or                                                        
-  let a = env.dsPop();                                         
-  let b = env.dsPop();                                         
-  env.dsPush(a | b);                                           
-end-code                                                       
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
 \ words: cmove cmove> count depth fill max                     
                                                                
 : cmove   dup 0= if drop drop drop else                        
