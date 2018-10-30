@@ -392,11 +392,11 @@ code ds-clear   env.ds.p = 0;                   end-code
    1 - else >in @ then over - dup  pad c!  swap input-stream + 
    swap  pad 1 + swap  cmove>  pad ;                           
                                                                
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
+code d+                                                        
+  let wd2 = env.dsPop('ud');                                   
+  let wd1 = env.dsPop('ud');                                   
+ env.dsPush(wd1 + wd2, 'd');                                   
+end-code                                                       
                                                                
 \ words: */mod                                                 
                                                                
@@ -409,10 +409,10 @@ code */mod
   env.dsPush(n1 - n2 * n4);                                    
   env.dsPush(n4);                                              
 end-code                                                       
-code d+                                                        
-  let wd2 = env.dsPop('ud');                                   
-  let wd1 = env.dsPop('ud');                                   
- env.dsPush(wd1 + wd2, 'd');                                   
+                                                               
+code vocab                                                     
+  let s = env.memReadString(env.dsPop());                      
+  env.vocabulary(s);                                           
 end-code                                                       
 \ words: d< dnegate                                            
                                                                
@@ -422,13 +422,13 @@ code d<
   env.dsPush(d1 < d2, 'b');                                    
 end-code                                                       
                                                                
-code dnegate                                                   
-  let d = env.dsPop('d');                                      
-  env.dsPush(-d, 'd');                                         
-end-code                                                       
+code dnegate  env.dsPush(-env.dsPop('d'), 'd');  end-code      
                                                                
 : .(   41 word count type  ; immediate                         
-: (   41 word drop  ; immediate                                
+:  (   41 word drop        ; immediate                         
+                                                               
+                                                               
+                                                               
                                                                
 \ words: s" space? -trailing state [ ] [compile] ['] (.") ."   
                                                                
@@ -448,11 +448,10 @@ end-code
 : repeat  swap <resolve >resolve  ; immediate                  
 \ words: vocab vocabulary vocabulary-name vocabulary-name!     
 \        definitions assembler forth                           
-code vocab                                                     
-  let addr = env.dsPop();                                      
-  let s = env.memReadString(addr);                             
-  env.vocabulary(s);                                           
-end-code                                                       
+                                                               
+                                                               
+                                                               
+                                                               
                                                                
 : vocabulary-name  32 word count dup >in @ swap - 1 - >in !  ; 
 : vocabulary-name!  dup ,  here swap  dup allot  cmove>  ;     
@@ -462,6 +461,7 @@ code definitions  env.definitions()  end-code
 vocabulary forth                                               
 s" assembler" dup dup dup pad + 1+ ! pad + 3 + swap cmove>     
 pad count + vocab definitions vocabulary assembler             
+                                                               
 \ words: abort" (abort") find forget 2variable 2constant d0=   
 \ 2swap 2over 2rot                                             
 forth definitions                                              
