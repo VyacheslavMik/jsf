@@ -86,27 +86,27 @@ code /
   env.dsPush(Math.floor(b / a));                               
 end-code                                                       
                                                                
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
+code >r                                                        
+  let nextWord = env.rsPop();                                  
+  env.rsPush(env.dsPop());                                     
+  env.rsPush(nextWord);                                        
+end-code                                                       
                                                                
                                                                
                                                                
 \ words: >r r>                                                 
-                                                               
-code >r                                                        
-  let next_word = env.rsPop();                                 
-  env.rsPush(env.dsPop());                                     
-  env.rsPush(next_word);                                       
-end-code                                                       
                                                                
 code r>                                                        
   let next_word = env.rsPop();                                 
   env.dsPush(env.rsPop());                                     
   env.rsPush(next_word);                                       
 end-code                                                       
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
                                                                
                                                                
                                                                
