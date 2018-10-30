@@ -60,7 +60,7 @@ code +
   env.dsPush(a + b);                                           
 end-code                                                       
                                                                
-                                                               
+code not  env.dsPush(~env.dsPop());  end-code                  
                                                                
 \ words: - *                                                   
                                                                
@@ -76,8 +76,8 @@ code *
   env.dsPush(a * b);                                           
 end-code                                                       
                                                                
-                                                               
-                                                               
+code ,   env.memWriteNextCell(env.dsPop());  end-code          
+code c,  env.memWriteNextByte(env.dsPop());  end-code          
 \ words: /                                                     
                                                                
 code /                                                         
@@ -136,18 +136,13 @@ code :
   env.entry(name);                                             
 end-code                                                       
                                                                
-code not                                                       
-  env.dsPush(~env.dsPop());                                    
-end-code                                                       
-                                                               
-                                                               
-                                                               
-\ words: immediate ;                                           
-                                                               
 code immediate                                                 
   let w = env.compilationVocabulary.word;                      
   env.memory[w] = 1;                                           
 end-code                                                       
+                                                               
+                                                               
+\ words: immediate ;                                           
                                                                
 code ;                                                         
   let word = env.toBody(env.findWord('exit'));                 
@@ -156,21 +151,10 @@ code ;
   env.memory[0] = 0; env.memory[2] = 0;                        
 end-code immediate                                             
                                                                
-                                                               
-                                                               
-\ words: , c, 0=                                               
-                                                               
-code ,                                                         
-  let v = env.dsPop();                                         
-  env.memWriteNextCell(v);                                     
-end-code                                                       
-                                                               
-code c,                                                        
-  let v = env.dsPop();                                         
-  env.memWriteNextByte(v);                                     
-end-code                                                       
-                                                               
 : 0=   0 =  ;                                                  
+                                                               
+                                                               
+                                                               
                                                                
                                                                
                                                                
