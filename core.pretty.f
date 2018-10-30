@@ -448,36 +448,36 @@ code dnegate  env.dsPush(-env.dsPop('d'), 'd');  end-code
 : repeat  swap <resolve >resolve  ; immediate                  
 \ words: vocab vocabulary vocabulary-name vocabulary-name!     
 \        definitions assembler forth                           
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-: vocabulary-name  32 word count dup >in @ swap - 1 - >in !  ; 
-: vocabulary-name!  dup ,  here swap  dup allot  cmove>  ;     
-: vocabulary  vocabulary-name  create  vocabulary-name!        
-   does>  vocab  ;                                             
+code find         env.find();        end-code                  
+code forget       env.forget();      end-code                  
 code definitions  env.definitions()  end-code                  
+                                                               
+: vocabulary-name   32 word count dup >in @ swap - 1- >in !  ; 
+: vocabulary-name!  dup ,  here swap  dup allot  cmove>      ; 
+: vocabulary        vocabulary-name  create  vocabulary-name!  
+   does>  vocab  ;                                             
+                                                               
 vocabulary forth                                               
 s" assembler" dup dup dup pad + 1+ ! pad + 3 + swap cmove>     
-pad count + vocab definitions vocabulary assembler             
-                                                               
+pad count + vocab definitions                                  
+vocabulary assembler                                           
+forth definitions                                              
 \ words: abort" (abort") find forget 2variable 2constant d0=   
 \ 2swap 2over 2rot                                             
-forth definitions                                              
+                                                               
 code throw  env.throwError(); end-code                         
                                                                
 : (abort")  if r> dup >r throw else r> count + >r then ;       
-: abort"  compile (abort") 34 word count  dup c,  here swap    
+: abort"    compile (abort") 34 word count  dup c,  here swap  
    dup allot cmove> ; immediate                                
-code find  env.find();  end-code                               
-code forget  env.forget();  end-code                           
-: 2variable  create 0 , 0 ,  ;                                 
+                                                               
+: 2variable  create 0 , 0 ,         ;                          
 : 2constant  create , ,  does>  2@  ;                          
-: d0=  0= swap 0= and  ;                                       
-: 2swap  3 roll 3 roll  ;                                      
-: 2over  3 pick 3 pick  ;                                      
-: 2rot  5 roll 5 roll  ;                                       
+: d0=        0= swap 0= and         ;                          
+: 2swap      3 roll 3 roll          ;                          
+: 2over      3 pick 3 pick          ;                          
+: 2rot       5 roll 5 roll          ;                          
+                                                               
 \ words: dabs dmax dmin d2/                                    
                                                                
 code dabs                                                      
@@ -486,13 +486,13 @@ code dabs
   env.dsPush(d, 'd');                                          
 end-code                                                       
                                                                
-: dmax  2over 2over d<  if  2swap  then  2drop  ;              
+: dmax  2over 2over d<  if  2swap  then  2drop     ;           
 : dmin  2over 2over d< not if  2swap  then  2drop  ;           
                                                                
-code d2/                                                       
-  let d = env.dsPop('d');                                      
-  env.dsPush(d / 2, 'd');                                      
-end-code                                                       
+code d2/  env.dsPush(env.dsPop('d') / 2, 'd');  end-code       
+                                                               
+                                                               
+                                                               
                                                                
 \ words: du< d- base decimal                                   
                                                                
