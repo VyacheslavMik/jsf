@@ -60,8 +60,8 @@ code +
   env.dsPush(a + b);                                           
 end-code                                                       
                                                                
-code not  env.dsPush(~env.dsPop());  end-code                  
-                                                               
+code not   env.dsPush(~env.dsPop());  end-code                 
+code here  env.dsPush(env.dp);        end-code                 
 \ words: - *                                                   
                                                                
 code -                                                         
@@ -145,51 +145,35 @@ end-code
 \ words: immediate ;                                           
                                                                
 code ;                                                         
-  let word = env.toBody(env.findWord('exit'));                 
+  let exitXt = env.toBody(env.findWord('exit'));               
   env.memWriteNextCell(2);                                     
-  env.memWriteNextCell(word);                                  
+  env.memWriteNextCell(exitXt);                                
   env.memory[0] = 0; env.memory[2] = 0;                        
 end-code immediate                                             
                                                                
-: 0=   0 =  ;                                                  
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-\ words: here, does>                                           
-                                                               
-code here                                                      
-   env.dsPush(env.dp);                                         
-end-code                                                       
-                                                               
 code does>                                                     
-  let code_pointer = env.rsPop();                              
   let w = env.compilationVocabulary.word;                      
   let pf = env.toBody(w);                                      
-  env.writeCell(env.memory, pf + 6, code_pointer);             
+  env.writeCell(env.memory, pf + 6, env.rsPop());              
 end-code                                                       
                                                                
+: 0=   0 =  ;                                                  
+\ words: here, does>                                           
+                                                               
 : nop ;                                                        
-                                                               
-                                                               
-\ words: create                                                
                                                                
 code create                                                    
   let name = env.readWord();                                   
   if (name.trim() == '') { throw 'Empty string for name'; }    
   let nopAddr = env.findWord('nop');                           
-  let nop_caddr = env.toBody(nopAddr);                         
+  let nopXt = env.toBody(nopAddr);                             
   let exitAddr = env.findWord('exit');                         
-  let exit_caddr = env.toBody(exitAddr);                       
+  let exitXt = env.toBody(exitAddr);                           
   env.entry(name);                                             
   env.memWriteNextCell(3); env.memWriteNextCell(env.dp + 10);  
-  env.memWriteNextCell(2); env.memWriteNextCell(nop_caddr);    
-  env.memWriteNextCell(2); env.memWriteNextCell(exit_caddr);   
+  env.memWriteNextCell(2); env.memWriteNextCell(nopXt);        
+  env.memWriteNextCell(2); env.memWriteNextCell(exitXt);       
 end-code                                                       
-                                                               
-                                                               
 \ words: variable constant ' execute                           
                                                                
 : variable   create  0 ,  does>  ;                             
