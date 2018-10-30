@@ -92,8 +92,8 @@ code >r
   env.rsPush(nextWord);                                        
 end-code                                                       
                                                                
-code .s  env.printStack(env.ds);  end-code                     
-                                                               
+code .s     env.printStack(env.ds);    end-code                
+code depth  env.dsPush(env.ds.p / 2);  end-code                
 \ words: >r r>                                                 
                                                                
 code r>                                                        
@@ -283,30 +283,30 @@ end-code
 : ?dup   dup 0= not  if dup then  ;                            
 : abs    dup 0< if -1 * then      ;                            
                                                                
-                                                               
-                                                               
+: count   1+ dup 1- c@                   ;                     
+: max     over over < if swap then drop  ;                     
                                                                
 \ words: cmove cmove> count depth fill max                     
                                                                
 : cmove   dup 0= if drop drop drop else                        
    0 do over i + c@  over i + c!  loop drop drop then ;        
+                                                               
 : cmove>   dup 0= if drop drop drop else                       
    -1 swap 1- do  over i + c@  over i + c!  -1 +loop           
    drop drop then ;                                            
-: count   1+ dup 1- c@ ;                                       
-                                                               
-code depth                                                     
-  env.dsPush(env.ds.p / 2);                                    
-end-code                                                       
                                                                
 : fill  over if swap 0 do over i + over swap c! loop           
    else drop then  drop drop ;                                 
-: max   over over < if swap then drop ;                        
+                                                               
+: min      over over > if swap then drop ;                     
+: mod      /mod drop                     ;                     
+: negate   0 swap -                      ;                     
+                                                               
 \ words: min mod negate roll rot                               
                                                                
-: min   over over > if swap then drop ;                        
-: mod   /mod drop ;                                            
-: negate   0 swap - ;                                          
+                                                               
+                                                               
+                                                               
                                                                
 code roll                                                      
   let n = env.dsPop() + 1;                                     
