@@ -141,7 +141,7 @@ code immediate
   env.memory[w] = 1;                                           
 end-code                                                       
                                                                
-                                                               
+code emit  env.printChar(env.dsPop());  end-code               
 \ words: immediate ;                                           
                                                                
 code ;                                                         
@@ -313,10 +313,10 @@ code roll
   env.dsPush(v);                                               
 end-code                                                       
                                                                
-: rot   2 roll ;                                               
-                                                               
-                                                               
-                                                               
+: rot      2 roll                                ;             
+: cr       10 emit                               ;             
+: space    32 emit                               ;             
+: spaces   dup if 0 do space loop else drop then ;             
                                                                
 \ words: u< um*                                                
                                                                
@@ -334,22 +334,6 @@ code um/mod
   env.dsPush(u3);                                              
 end-code                                                       
                                                                
-\ word: um/mod                                                 
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
-                                                               
 \ words: xor emit cr space spaces                              
                                                                
 code xor                                                       
@@ -358,14 +342,14 @@ code xor
   env.dsPush(w1 ^ w2);                                         
 end-code                                                       
                                                                
-code emit                                                      
-  let c = env.dsPop();                                         
-  env.printChar(c);                                            
-end-code                                                       
                                                                
-: cr   10 emit ;                                               
-: space  32 emit ;                                             
-: spaces   dup if 0 do space loop else drop then ;             
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
+                                                               
 \ words: key type allot begin until 2! 2@ 2drop d= 2dup        
                                                                
 code key                                                       
