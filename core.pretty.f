@@ -11,8 +11,8 @@ code use   let file = env.readWord(); env.use(file);   end-code
 11 load 12 load 13 load 14 load 15 load 16 load 17 load 18 load
 19 load 20 load 21 load 22 load 23 load 24 load 25 load 26 load
 27 load 28 load 29 load 30 load 31 load 32 load 33 load 34 load
-35 load 36 load 37 load 38 load 39 load 40 load 41 load 42 load
-43 load                                                        
+35 load 36 load                                                
+                                                               
                                                                
 \ words: exit >=                                               
                                                                
@@ -486,12 +486,12 @@ code dabs
   env.dsPush(d, 'd');                                          
 end-code                                                       
                                                                
-: dmax  2over 2over d<  if  2swap  then  2drop     ;           
-: dmin  2over 2over d< not if  2swap  then  2drop  ;           
+variable base                                                  
+: dmax     2over 2over d<  if  2swap  then  2drop     ;        
+: dmin     2over 2over d< not if  2swap  then  2drop  ;        
+: decimal  10 base !  ;  decimal                               
                                                                
 code d2/  env.dsPush(env.dsPop('d') / 2, 'd');  end-code       
-                                                               
-                                                               
                                                                
                                                                
 \ words: du< d- base decimal                                   
@@ -508,7 +508,7 @@ code d-
   env.dsPush(ud1 - ud2, 'd');                                  
 end-code                                                       
                                                                
-variable base  : decimal  10 base !  ;  decimal                
+                                                               
                                                                
 \ words: char [char] d* char-digit" input-char                 
                                                                
