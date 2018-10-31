@@ -1140,5 +1140,6 @@ module.exports = {
     setExitFn: (v) => { exitFn = v },
     setWriteFileFn: (v) => { writeFileFn = v },
     setReadFileFn: (v) => { readFileFn = v },
-    isOnPause: () => { return isOnPause; }
+    isOnPause: () => { return isOnPause; },
+    isWaitingKey: () => { return isWaitingKey; }
 };

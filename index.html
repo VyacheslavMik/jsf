@@ -12,7 +12,7 @@
       font-family: monospace;
       }
 
-      #output {
+      #terminal {
       white-space: pre-wrap;
       word-break: break-all;
       padding-top: 5px;
@@ -20,17 +20,7 @@
       display: inline-block;
       }
 
-      #input {
-      background-color: #000;
-      color: #fff;
-      border: none;
-      font-size: 18px;
-      font-family: monospace;
-      caret-color: lightgreen;
-      width: 100%;
-      }
-
-      input:focus {
+      #terminal:focus {
       outline: none;
       }
 
@@ -54,8 +44,7 @@
     </style>
   </head>
   <body>
-    <span id="output"></span>
-    <input id="input" autofocus></input>
+    <div id="terminal" autofocus tabindex="0"></div>
     <script type="text/javascript" src="bundle.js"></script>
   </body>
 </html>

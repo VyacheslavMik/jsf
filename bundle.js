@@ -1,5 +1,6 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 let kernel = require('./kernel.js');
+let charCount = 0;
 
 function readFile (fileName, resolve) {
     fetch(fileName)
@@ -10,28 +11,41 @@ function readFile (fileName, resolve) {
 
 kernel.setReadFileFn(readFile);
 
-var output = document.getElementById('output');
+var terminal = document.getElementById('terminal');
+
+terminal.onkeypress = (ev) => {
+    charCount++;
+    kernel.processChar(ev.keyCode);
+}
+
+terminal.onkeydown = (ev) => {
+    if (ev.keyCode == 8) {
+	kernel.processChar(127);
+	if (charCount > 0 && !kernel.isWaitingKey()) {
+	    let s = terminal.textContent;
+	    terminal.textContent = s.slice(0, -3) + '|';
+	    charCount--;
+	}
+    }
+}
 
 kernel.setWriteFn((outputBuffer) => {
-    console.log(outputBuffer);
-    output.textContent += outputBuffer;
+    if (outputBuffer.charCodeAt(outputBuffer.length - 1) == 10) {
+	charCount = 0;
+    }
+    let s = terminal.textContent;
+    terminal.textContent = s.slice(0, -1) + outputBuffer + '|';
+    window.scrollTo(0,document.body.scrollHeight);
 });
 
-var input = document.getElementById('input');
-input.onchange = (ev) => {
-    console.log(ev.target.value);
-    output.textContent += ev.target.value + ' ';
-    kernel.execute(ev.target.value);
-    input.value = '';
+window.onclick = () => {
+    terminal.focus();
 }
 
-window.onclick = () => {
-    input.focus();
-}
+terminal.focus();
 
 kernel.setExitFn((err) => {
-    output.parentNode.removeChild(output);
-    input.parentNode.removeChild(input);
+    terminal.parentNode.removeChild(terminal);
     let text;
     if (err) {
 	text = err;
@@ -1187,7 +1201,8 @@ module.exports = {
     setExitFn: (v) => { exitFn = v },
     setWriteFileFn: (v) => { writeFileFn = v },
     setReadFileFn: (v) => { readFileFn = v },
-    isOnPause: () => { return isOnPause; }
+    isOnPause: () => { return isOnPause; },
+    isWaitingKey: () => { return isWaitingKey; }
 };
 
 },{}]},{},[1]);
