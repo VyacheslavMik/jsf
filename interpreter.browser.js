@@ -21,8 +21,10 @@ terminal.onkeypress = (ev) => {
     } else {
 	throw 'Do not know what to do!';
     }
+    if (c != 8) {
     charCount++;
-    kernel.processChar(c);
+	kernel.processChar(c);
+    }
 }
 
 terminal.onkeydown = (ev) => {
