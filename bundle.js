@@ -14,12 +14,28 @@ kernel.setReadFileFn(readFile);
 var terminal = document.getElementById('terminal');
 
 terminal.onkeypress = (ev) => {
+    let c;
+    if (ev.keyCode != 0) {
+	c = ev.keyCode;
+    } else if (ev.charCode != 0) {
+	c = ev.charCode;
+    } else {
+	throw 'Do not know what to do!';
+    }
     charCount++;
-    kernel.processChar(ev.keyCode);
+    kernel.processChar(c);
 }
 
 terminal.onkeydown = (ev) => {
-    if (ev.keyCode == 8) {
+    let c;
+    if (ev.keyCode != 0) {
+	c = ev.keyCode;
+    } else if (ev.charCode != 0) {
+	c = ev.charCode;
+    } else {
+	throw 'Do not know what to do!';
+    }
+    if (c == 8) {
 	kernel.processChar(127);
 	if (charCount > 0 && !kernel.isWaitingKey()) {
 	    let s = terminal.textContent;
