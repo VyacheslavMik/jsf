@@ -15,6 +15,7 @@ var terminal = document.getElementById('terminal');
 var stub = document.getElementById('stub');
 
 stub.onkeypress = (ev) => {
+    alert('aaaaa');
     let c;
     if (ev.keyCode != 0) {
 	c = ev.keyCode;
