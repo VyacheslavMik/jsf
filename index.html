@@ -2,6 +2,7 @@
   <head>
     <title>FORTH-83 INTERPRETER</title>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width">
     <style>
       body {
       width: 100%;
@@ -42,10 +43,18 @@
       padding: 5px 10px;
       margin-top: 10px;
       }
+
+      #stub {
+      height: 0;
+      border: none;
+      margin: 0;
+      padding: 0;
+      }
     </style>
   </head>
   <body>
     <div id="terminal" autofocus tabindex="0"></div>
+    <input id="stub">
     <script type="text/javascript" src="bundle.js"></script>
   </body>
 </html>

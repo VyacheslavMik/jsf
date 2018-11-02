@@ -11,8 +11,9 @@ function readFile (fileName, resolve) {
 kernel.setReadFileFn(readFile);
 
 var terminal = document.getElementById('terminal');
+var stub = document.getElementById('stub');
 
-terminal.onkeypress = (ev) => {
+stub.onkeypress = (ev) => {
     let c;
     if (ev.keyCode != 0) {
 	c = ev.keyCode;
@@ -27,7 +28,7 @@ terminal.onkeypress = (ev) => {
     }
 }
 
-terminal.onkeydown = (ev) => {
+stub.onkeydown = (ev) => {
     let c;
     if (ev.keyCode != 0) {
 	c = ev.keyCode;
@@ -56,12 +57,13 @@ kernel.setWriteFn((outputBuffer) => {
 });
 
 window.onclick = () => {
-    terminal.focus();
+    stub.focus();
 }
 
-terminal.focus();
+stub.focus();
 
 kernel.setExitFn((err) => {
+    stub.parentNode.removeChild(stub);
     terminal.parentNode.removeChild(terminal);
     let text;
     if (err) {
