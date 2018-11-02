@@ -21,6 +21,7 @@ stub.onkeypress = (ev) => {
     } else if (ev.charCode != 0) {
 	c = ev.charCode;
     } else {
+	alert('aaaaa');
 	throw 'Do not know what to do!';
     }
     if (c != 8) {
@@ -36,6 +37,7 @@ stub.onkeydown = (ev) => {
     } else if (ev.charCode != 0) {
 	c = ev.charCode;
     } else {
+	alert('aaaaa');
 	throw 'Do not know what to do!';
     }
     if (c == 8) {
