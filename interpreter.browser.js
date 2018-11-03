@@ -11,33 +11,29 @@ function readFile (fileName, resolve) {
 kernel.setReadFileFn(readFile);
 
 var terminal = document.getElementById('terminal');
-var stub = document.getElementById('stub');
 
-stub.onkeypress = (ev) => {
+terminal.onkeypress = (ev) => {
     let c;
     if (ev.keyCode != 0) {
 	c = ev.keyCode;
     } else if (ev.charCode != 0) {
 	c = ev.charCode;
     } else {
-	alert('aaaaa');
 	throw 'Do not know what to do!';
     }
     if (c != 8) {
-	charCount++;
+    charCount++;
 	kernel.processChar(c);
     }
-    terminal.textContent = c;
 }
 
-stub.onkeydown = (ev) => {
+terminal.onkeydown = (ev) => {
     let c;
     if (ev.keyCode != 0) {
 	c = ev.keyCode;
     } else if (ev.charCode != 0) {
 	c = ev.charCode;
     } else {
-	alert('aaaaa');
 	throw 'Do not know what to do!';
     }
     if (c == 8) {
@@ -60,13 +56,12 @@ kernel.setWriteFn((outputBuffer) => {
 });
 
 window.onclick = () => {
-    stub.focus();
+    terminal.focus();
 }
 
-stub.focus();
+terminal.focus();
 
 kernel.setExitFn((err) => {
-    stub.parentNode.removeChild(stub);
     terminal.parentNode.removeChild(terminal);
     let text;
     if (err) {
