@@ -15,20 +15,19 @@ var terminal = document.getElementById('terminal');
 var stub = document.getElementById('stub');
 
 stub.onkeypress = (ev) => {
-    alert('aaaaa');
     let c;
     if (ev.keyCode != 0) {
 	c = ev.keyCode;
     } else if (ev.charCode != 0) {
 	c = ev.charCode;
     } else {
-	alert('aaaaa');
 	throw 'Do not know what to do!';
     }
     if (c != 8) {
-    charCount++;
+	charCount++;
 	kernel.processChar(c);
     }
+    terminal.textContent = c;
 }
 
 stub.onkeydown = (ev) => {
@@ -38,7 +37,6 @@ stub.onkeydown = (ev) => {
     } else if (ev.charCode != 0) {
 	c = ev.charCode;
     } else {
-	alert('aaaaa');
 	throw 'Do not know what to do!';
     }
     if (c == 8) {

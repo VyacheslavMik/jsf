@@ -24,9 +24,10 @@ stub.onkeypress = (ev) => {
 	throw 'Do not know what to do!';
     }
     if (c != 8) {
-    charCount++;
+	charCount++;
 	kernel.processChar(c);
     }
+    terminal.textContent = c;
 }
 
 stub.onkeydown = (ev) => {
