@@ -21,7 +21,7 @@ stub.onkeypress = (ev) => {
     } else if (ev.charCode != 0) {
 	c = ev.charCode;
     } else {
-	throw 'Do not know what to do!';
+	//throw 'Do not know what to do!';
     }
     if (c != 8) {
 	charCount++;
@@ -37,7 +37,7 @@ stub.onkeydown = (ev) => {
     } else if (ev.charCode != 0) {
 	c = ev.charCode;
     } else {
-	throw 'Do not know what to do!';
+	//throw 'Do not know what to do!';
     }
     if (c == 8) {
 	kernel.processChar(127);
