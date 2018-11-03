@@ -1,6 +1,6 @@
 # JSF
 
-An interpreter of the forth-83 standard (http://forth.sourceforge.net/standard/fst83/) written in the javascript.
+An interpreter of the forth-83 standard (http://forth.sourceforge.net/standard/fst83/) written on the javascript.
 
 
 ### Usage
