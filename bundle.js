@@ -23,7 +23,7 @@ terminal.onkeypress = (ev) => {
 	throw 'Do not know what to do!';
     }
     if (c != 8) {
-    charCount++;
+	charCount++;
 	kernel.processChar(c);
     }
 }
@@ -41,19 +41,22 @@ terminal.onkeydown = (ev) => {
 	kernel.processChar(127);
 	if (charCount > 0 && !kernel.isWaitingKey()) {
 	    let s = terminal.textContent;
-	    terminal.textContent = s.slice(0, -3) + '|';
+	    terminal.textContent = s.slice(0, -2) + '|';
 	    charCount--;
 	}
     }
 }
 
 kernel.setWriteFn((outputBuffer) => {
+    if (outputBuffer.charCodeAt(outputBuffer.length - 1) == 127) {
+	return;
+    }
     if (outputBuffer.charCodeAt(outputBuffer.length - 1) == 10) {
-	charCount = 0;
+    	charCount = 0;
     }
     let s = terminal.textContent;
     terminal.textContent = s.slice(0, -1) + outputBuffer + '|';
-    window.scrollTo(0,document.body.scrollHeight);
+    terminal.scrollTop = terminal.scrollHeight;
 });
 
 window.onclick = () => {
