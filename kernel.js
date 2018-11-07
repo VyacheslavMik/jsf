@@ -960,7 +960,6 @@ function textInterpreter () {
 		dump();
 		message = 'ok';
 	    } else if (word != '') {
-		let wordAddr = findWord(word);
 		if (wordAddr == undefined) {
 		    let integer = parseInteger(word);
 		    if (integer == undefined) {
@@ -978,7 +977,6 @@ function textInterpreter () {
 	    }
 	} else {
 	    if (memory[1] != 0) {
-		let wordAddr = findWord(word);
 		if (word != 'end-code') {
 		    memory[1].code += ' ' + word;
 		    message = 'compiled';
@@ -988,7 +986,6 @@ function textInterpreter () {
 		    message = 'ok';
 		}
 	    } else if (memory[2] != 0) {
-		let wordAddr = findWord(word);
 		if (wordAddr == undefined) {
 		    let integer = parseInteger(word);
 		    if (integer == undefined) {
